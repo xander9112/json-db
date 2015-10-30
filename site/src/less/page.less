@@ -1,0 +1,102 @@
+@import "mixins";
+
+html,
+body {
+	width: 100%;
+	min-width: 1200px;
+	height: 100%;
+}
+
+a {
+	text-decoration: underline;
+
+	&:hover {
+		text-decoration: none;
+		cursor: pointer;
+	}
+}
+
+.p-page {
+	.border(@lightGray, 0 0 0 1px);
+	margin-left: 239px;
+}
+
+.p-menu {
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	.border(@lightGray, 0 1px 0 0);
+	width: 240px;
+	min-height: 100%;
+
+	.logo-wrapper {
+		.inline-list(middle);
+	}
+
+	.logo {
+		.inline-list(middle);
+		margin: 15px 0 0 20px;
+		.border(@lightGray, 0 1px 0 0);
+		text-transform: uppercase;
+		text-decoration: none;
+		cursor: pointer;
+
+		.company-name {
+			padding-left: 6px;
+			width: 91px;
+			.font(16px, @proximaNovaBold, @dark, 15px);
+		}
+	}
+
+	.description {
+		margin-top: 15px;
+		margin-bottom: 0;
+		padding-left: 9px;
+		width: 75px;
+		.font(6px, @proximaNovaLight, @blueGray, 7px);
+		text-transform: uppercase;
+	}
+}
+
+.p-header {
+	display: flex;
+	justify-content: space-between;
+	position: fixed;
+	z-index: 11;
+	top: 0;
+	left: 240px;
+	right: 0;
+	.border(@darkWhite, 0 0 1px 0);
+	height: 60px;
+	.font(14px, @proximaNovaLight, @darkBlueGray);
+	white-space: nowrap;
+	background: @white;
+
+	.common {
+		display: flex;
+		align-items: center;
+		height: 60px;
+	}
+
+	.services {
+		display: flex;
+		align-items: center;
+		height: 60px;
+	}
+
+	.highlighted {
+		//.font(16px, );
+	}
+}
+
+.p-content-wrapper {
+	margin-top: 60px;
+}
+
+.p-footer {
+	width: 100%;
+	height: 360px;
+	padding-top: 40px;
+	background: @superLightGray;
+}

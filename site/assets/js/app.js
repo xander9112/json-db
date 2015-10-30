@@ -1,0 +1,943 @@
+"use strict";
+
+$$.Simulation = $$.Simulation || {};
+
+/**
+ * Не нужно использовать этот класс напрямую. Нужно использовать $$.Simulation.Spring.
+ */
+$$.Simulation.SpringSimulator = function () {
+	var self = this;
+
+	this._springs = [];
+	this._lastTime = +new Date();
+
+	setInterval(function () {
+		var now = +new Date();
+		var time = (now - self._lastTime) / 1000;
+		var dt = 0.01;
+
+		if (time > 0.2) {
+			// Если жс работает слишком медленно, замедлить симуляцию.
+			time = 0.2;
+		}
+
+		var i,
+		    ni = self._springs.length,
+		    spring,
+		    dampings = [],
+		    distance,
+		    newDistance,
+		    force,
+		    newVelocity,
+		    targetVelocityLimit,
+		    velocityLimit,
+		    positionLimits;
+
+		for (i = 0; i < ni; i++) {
+			spring = self._springs[i];
+			dampings.push(2 * Math.sqrt(spring._rigidness) * spring._damping);
+		}
+
+		while (time > 0.000001) {
+			for (i = 0; i < ni; i++) {
+				spring = self._springs[i];
+
+				if (spring._frozen) {
+					continue;
+				}
+
+				distance = spring._target - spring._position;
+
+				force = (distance >= 0 ? 1 : -1) * Math.pow(Math.abs(distance), spring._forcePower) * spring._rigidness - (spring._velocity >= 0 ? 1 : -1) * Math.abs(spring._velocity) * dampings[i];
+
+				newVelocity = spring._velocity + force * dt;
+
+				velocityLimit = spring._velocityLimit;
+				targetVelocityLimit = spring._targetVelocityLimit;
+
+				if (targetVelocityLimit !== null) {
+					targetVelocityLimit *= Math.pow(spring._targetVelocityLimitPower, Math.abs(distance));
+
+					if (velocityLimit === null || targetVelocityLimit < velocityLimit) {
+						velocityLimit = targetVelocityLimit;
+					}
+				}
+
+				if (velocityLimit !== null && Math.abs(newVelocity) > velocityLimit) {
+					newVelocity = (newVelocity >= 0 ? 1 : -1) * velocityLimit;
+				}
+
+				spring._position += newVelocity * dt;
+				spring._velocity = newVelocity;
+
+				if (spring._stopAtTarget) {
+					newDistance = spring._target - spring._position;
+
+					if (distance > 0 && newDistance <= 0 || distance < 0 && newDistance >= 0) {
+						spring._position = spring._target;
+						spring._velocity = 0;
+						continue;
+					}
+				}
+
+				if (spring._positionLimits !== null) {
+					positionLimits = spring._positionLimits;
+
+					if (spring._position < positionLimits[0]) {
+						spring._position = positionLimits[0];
+						spring._velocity = 0;
+					} else if (spring._position > positionLimits[1]) {
+						spring._position = positionLimits[1];
+						spring._velocity = 0;
+					}
+				}
+			}
+
+			time -= dt;
+		}
+
+		self._lastTime = now;
+
+		for (i = 0; i < ni; i++) {
+			spring = self._springs[i];
+
+			if (spring == null) {
+				continue;
+			}
+
+			if (!spring._frozen && spring._step) {
+				spring._step.call();
+			}
+		}
+	}, 20);
+};
+
+$$.Simulation.SpringSimulator.prototype = {
+	addSpring: function addSpring(spring) {
+		this._springs.push(spring);
+	},
+
+	deleteSpring: function deleteSpring(spring) {
+		var i = _.indexOf(this._springs, spring);
+
+		if (i != -1) {
+			this._springs.splice(i, 1);
+		}
+	}
+};
+
+// Создать один "глобальный" экземпляр.
+
+$$.Simulation.__springSimulator = new $$.Simulation.SpringSimulator();
+'use strict';
+
+$$.Simulation = $$.Simulation || {};
+
+/**
+ * @constructor
+ */
+$$.Simulation.Spring = function (options) {
+	options = _.extend({
+		frozen: false,
+		position: 0,
+		positionLimits: null,
+		target: 0,
+		targetLimits: null,
+		velocity: 0,
+		velocityLimit: null,
+		rigidness: 1,
+		damping: 1,
+		forcePower: 1,
+		targetVelocityLimit: null,
+		targetVelocityLimitPower: 1.25,
+		stopAtTarget: false,
+		step: null
+	}, options || {});
+
+	this._frozen = options.frozen;
+	this._position = options.position;
+	this._positionLimits = options.positionLimits;
+	this._target = options.target;
+	this._targetLimits = options.targetLimits;
+	this._velocity = options.velocity;
+	this._velocityLimit = options.velocityLimit;
+	this._rigidness = options.rigidness;
+	this._damping = options.damping;
+	this._forcePower = options.forcePower;
+	this._targetVelocityLimit = options.targetVelocityLimit;
+	this._targetVelocityLimitPower = options.targetVelocityLimitPower;
+	this._stopAtTarget = options.stopAtTarget;
+	this._step = null;
+
+	if (options.step) {
+		this.step(options.step);
+	}
+
+	this._applyTargetLimits();
+
+	$$.Simulation.__springSimulator.addSpring(this);
+};
+
+$$.Simulation.Spring.prototype = {
+	_applyTargetLimits: function _applyTargetLimits() {
+		if (this._targetLimits === null) {
+			return;
+		}
+
+		if (this._target < this._targetLimits[0]) {
+			this._target = this._targetLimits[0];
+		} else if (this._target > this._targetLimits[1]) {
+			this._target = this._targetLimits[1];
+		}
+	},
+
+	destroy: function destroy() {
+		this._step = null;
+		$$.Simulation.__springSimulator.deleteSpring(this);
+	},
+
+	moveTarget: function moveTarget(delta) {
+		this._target += delta;
+		this._applyTargetLimits();
+	},
+
+	step: function step(callback) {
+		this._step = _.bind(callback, this);
+	},
+
+	target: function target(value) {
+		if (arguments.length == 0) {
+			return this._target;
+		}
+
+		this._target = value;
+		this._applyTargetLimits();
+	},
+
+	targetLimits: function targetLimits(value) {
+		if (arguments.length == 0) {
+			return this._targetLimits;
+		}
+
+		this._targetLimits = value;
+		this._applyTargetLimits();
+	}
+};
+
+// Создать методы-аксессоры.
+
+_.each(['frozen', 'position', 'positionLimits', 'velocity', 'velocityLimit', 'rigidness', 'damping', 'forcePower',, 'targetVelocityLimit', 'targetVelocityLimitPower', 'stopAtTarget'], function (k) {
+	$$.Simulation.Spring.prototype[k] = function (value) {
+		if (arguments.length == 0) {
+			return this['_' + k];
+		}
+
+		this['_' + k] = value;
+	};
+});
+'use strict';
+
+var $$ = $$ || {};
+
+$$.extend = function (Child, Parent) {
+	var F = function F() {};
+	F.prototype = Parent.prototype;
+	Child.prototype = new F();
+	Child.prototype.constructor = Child;
+	Child.superclass = Parent.prototype;
+};
+
+$$.trim = function (str, charlist) {
+	charlist = !charlist ? ' \\s\xA0' : charlist.replace(/([\[\]\(\)\.\?\/\*\{\}\+\$\^\:])/g, '\$1');
+	var re = new RegExp('^[' + charlist + ']+|[' + charlist + ']+$', 'g');
+	return str.replace(re, '');
+};
+
+$$.parseUrlParams = function (url) {
+	var url = url || location.href;
+	var searchParam = {};
+	var regExpParams = /\?{1}.+/;
+
+	if (regExpParams.test(url)) {
+		url = url.replace(regExpParams, '');
+
+		var urlParams = location.search.replace('?', '');
+		urlParams = urlParams.split('&');
+
+		_.each(urlParams, function (item, index, list) {
+			var param = item.split('=');
+			searchParam[param[0]] = param[1];
+		});
+	}
+	return searchParam;
+};
+
+$$.clamp = function (value, min, max) {
+	return Math.min(max, Math.max(min, value));
+};
+
+$$.getRandomInt = function (min, max) {
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+$$.Transitions = {
+	linear: function linear(t) {
+		return t;
+	},
+
+	quadIn: function quadIn(t) {
+		return t * t;
+	},
+
+	quadInOut: function quadInOut(t) {
+		t *= 2;
+
+		if (t < 1) {
+			return 0.5 * t * t;
+		}
+
+		return -0.5 * ((t - 1) * (t - 3) - 1);
+	},
+
+	quadOut: function quadOut(t) {
+		return -t * (t - 2);
+	},
+
+	sineIn: function sineIn(t) {
+		return 1 - Math.cos(t * Math.PI * 0.5);
+	},
+
+	sineInOut: function sineInOut(t) {
+		return 0.5 - 0.5 * Math.cos(t * Math.PI);
+	},
+
+	sineOut: function sineOut(t) {
+		return Math.sin(t * Math.PI * 0.5);
+	}
+};
+
+$$.makeVideoPlayerHtml = function (videoType, videoId, width, height) {
+	if (videoType == 'youtube') {
+		return '<iframe class="youtube-player" type="text/html"' + ' width="' + width + '" height="' + height + '" src="' + 'http://www.youtube.com/embed/' + videoId + '?autoplay=0&rel=0&amp;controls=0&amp;showinfo=0' + '" frameborder="0" wmode="opaque" autoplay="false"></iframe>';
+	} else if (videoType == 'vimeo') {
+		return '<iframe wmode="opaque" width="' + width + '" height="' + height + '" src="' + 'http://player.vimeo.com/video/' + videoId + '?autoplay=1' + '" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>';
+	}
+
+	return '';
+};
+
+$$.ScrollWidth = function () {
+	// создадим элемент с прокруткой
+	var div = document.createElement('div');
+
+	div.style.overflowY = 'scroll';
+	div.style.width = '50px';
+	div.style.height = '50px';
+
+	// при display:none размеры нельзя узнать
+	// нужно, чтобы элемент был видим,
+	// visibility:hidden - можно, т.к. сохраняет геометрию
+	div.style.visibility = 'hidden';
+
+	document.body.appendChild(div);
+	var scrollWidth = div.offsetWidth - div.clientWidth;
+	document.body.removeChild(div);
+
+	return scrollWidth;
+};
+
+$$.FakerInfo = function (block) {
+	var news = block.find('.news-block');
+
+	news.each(function () {
+		var item = $(this);
+		var hasImage = item.find('img').length == 0 ? false : true;
+		var hasTitle = item.find('.title').length == 0 ? false : true;
+
+		if (hasTitle) {
+			var title = item.find('.title');
+			var subtitle = item.find('.subtitle');
+			var description = item.find('.description');
+			var date = item.find('.date');
+			var rating = item.find('.rating');
+
+			var timeDate = new Date(faker.date.between(2010, 2014));
+			var curr_date = timeDate.getDate();
+			var curr_month = timeDate.getMonth() + 1;
+			var curr_year = timeDate.getFullYear() % 1000;
+			var formatDate = curr_date + "." + numb(curr_month) + "." + curr_year;
+			var formatTime = numb(timeDate.getHours()) + ":" + numb(timeDate.getMinutes());
+
+			date.text(formatDate + ', ' + formatTime);
+			title.text(faker.lorem.words(1)[0]);
+			subtitle.text(faker.lorem.paragraph(1));
+			description.text(faker.lorem.paragraph(1));
+			rating.text($$.getRandomInt(0, 4) + '.' + $$.getRandomInt(0, 9));
+		}
+
+		if (hasImage) {
+			var width = item.width();
+			var height = item.height();
+			item.find('img').attr('src', faker.image.imageUrl(width, height, 'transport'));
+		}
+	});
+
+	function numb(number) {
+		if (number < 10) {
+			return '0' + number;
+		} else {
+			return number;
+		}
+	}
+};
+
+$$.number_format = function (number, decimals, dec_point, thousands_sep) {
+	number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
+	var n = !isFinite(+number) ? 0 : +number,
+	    prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
+	    sep = typeof thousands_sep === 'undefined' ? ',' : thousands_sep,
+	    dec = typeof dec_point === 'undefined' ? '.' : dec_point,
+	    s = '',
+	    toFixedFix = function toFixedFix(n, prec) {
+		var k = Math.pow(10, prec);
+		return '' + Math.round(n * k) / k;
+	};
+	s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
+	if (s[0].length > 3) {
+		s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
+	}
+	if ((s[1] || '').length < prec) {
+		s[1] = s[1] || '';
+		s[1] += new Array(prec - s[1].length + 1).join('0');
+	}
+	return s.join(dec);
+};
+"use strict";
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var Component = (function (_$$$Emitter) {
+	_inherits(Component, _$$$Emitter);
+
+	function Component() {
+		_classCallCheck(this, Component);
+
+		_get(Object.getPrototypeOf(Component.prototype), "constructor", this).call(this);
+		$$.Emitter.call(this);
+
+		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+			args[_key] = arguments[_key];
+		}
+
+		if (args.length === 1) {
+			this.root = args[0];
+		} else if (args.length === 2) {
+			this.root = args[0];
+			this.options = args[1];
+		}
+
+		this.initialize();
+	}
+
+	_createClass(Component, [{
+		key: "initialize",
+		value: function initialize() {
+			this._cacheNodes();
+			this._bindEvents();
+			this._ready();
+		}
+	}, {
+		key: "_cacheNodes",
+		value: function _cacheNodes() {}
+	}, {
+		key: "_bindEvents",
+		value: function _bindEvents() {}
+	}, {
+		key: "_ready",
+		value: function _ready() {}
+	}]);
+
+	return Component;
+})($$.Emitter);
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+(function () {
+	if (!_.isUndefined(window.google)) {
+		var _gm = google.maps;
+	}
+})();
+
+var GoogleMap = (function () {
+	function GoogleMap(root) {
+		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+		_classCallCheck(this, GoogleMap);
+
+		var defaultOptions = {
+			offset: false,
+			coords: [-34.397, 150.644],
+			mapOptions: {
+				mapTypeId: !_.isUndefined(window.google) ? google.maps.MapTypeId.ROADMAP : '', //MapTypeId.SATELLITE, MapTypeId.HYBRID, MapTypeId.TERRAIN
+				maxZoom: 45,
+				zoom: 15,
+				minZoom: 0,
+				zoomControl: true,
+				overviewMapControl: true
+			}
+		};
+
+		this.root = root;
+		this.options = _.assign(defaultOptions, options);
+
+		this.MercatorProjection = null;
+		this.MapIcon = null;
+		this.MapCenter = null;
+	}
+
+	_createClass(GoogleMap, [{
+		key: 'initialize',
+		value: function initialize() {}
+	}, {
+		key: '_createMap',
+		value: function _createMap() {
+			var _this = this;
+
+			var centerMap = new gm.LatLng(this.options.coords[0], this.options.coords[1]);
+			this.map = new gm.Map(this.root.get(0), this.options.mapOptions);
+			this.map.setCenter(centerMap);
+			this.MapCenter = centerMap;
+
+			google.maps.event.addListenerOnce(this.map, 'idle', function (f) {
+				if (_this.options.offset) {
+					_this.MercatorProjection = new MercatorProjection(_this.map);
+
+					var offset = _this.root.width() - _this.options.offset;
+
+					var point = new google.maps.Point(offset / 2, _this.root.height() / 2);
+					var latLng = _this.MercatorProjection.PixelToLatLng(point);
+
+					_this.map.setCenter(latLng);
+
+					_this.MapCenter = latLng;
+				}
+			});
+
+			google.maps.event.addListener(this.map, 'click', _.bind(function (event) {
+				this.trigger('mapClick', event);
+			}, this));
+
+			google.maps.event.addListener(this.map, 'zoom_changed', function (f) {
+				if (_this.MapCenter) {
+					_this.map.panTo(_this.MapCenter);
+				}
+			});
+
+			google.maps.event.addListener(this.map, 'dragstart', _.bind(function (event) {
+				this.center = null;
+			}, this));
+		}
+	}, {
+		key: '_cacheNodes',
+		value: function _cacheNodes() {
+			this.nodes = {};
+		}
+	}, {
+		key: '_bindEvents',
+		value: function _bindEvents() {}
+	}, {
+		key: '_ready',
+		value: function _ready() {
+			var _this2 = this;
+
+			gm.event.addDomListener(window, 'load', this._createMap());
+
+			this.icon = {
+				url: './site/assets/images/point.png',
+				size: [32, 37]
+			};
+
+			if (!this.nodes.addresses.length) {
+				return;
+			}
+
+			this.nodes.addresses.each(function (index) {
+				var item = $(_this2);
+				var coords = $.parseJSON(item.data('coords').json);
+
+				_this2.marker = coords;
+
+				item.on('click', function (e) {
+					e.preventDefault();
+					var item = $(this);
+
+					if (item.hasClass('active')) {
+						return;
+					}
+
+					item.siblings().removeClass('active').end().addClass('active');
+
+					GoogleMaps.panTo = coords;
+				});
+			});
+		}
+	}, {
+		key: 'icon',
+		set: function set(value) {
+			if (value) {
+				this.MapIcon = {
+					url: value.url,
+					size: new google.maps.Size(value.size[0], value.size[1]),
+					origin: new google.maps.Point(0, 0),
+					anchor: new google.maps.Point(value.size[0] / 2, value.size[1])
+				};
+			}
+		},
+		get: function get() {
+			return this.MapIcon;
+		}
+	}, {
+		key: 'marker',
+		set: function set(value) {
+			var position = null;
+
+			_.isArray(value) ? position = new gm.LatLng(value[0], value[1]) : position = value;
+
+			var icon = this.icon == null ? '' : this.icon;
+
+			var marker = new gm.Marker({
+				position: position,
+				map: this.map,
+				icon: icon
+			});
+
+			google.maps.event.addListener(marker, 'click', _.bind(function () {
+				this.panTo = marker.getPosition();
+			}, this));
+		}
+	}, {
+		key: 'center',
+		set: function set(value) {
+			var position = null;
+
+			_.isArray(value) ? position = new gm.LatLng(value[0], value[1]) : position = value;
+
+			this.map.setCenter(position);
+
+			this.MapCenter = position;
+		}
+	}, {
+		key: 'panTo',
+		set: function set(value) {
+			var position = null;
+
+			_.isArray(value) ? position = new gm.LatLng(value[0], value[1]) : position = value;
+
+			this.map.panTo(position);
+			this.MapCenter = position;
+
+			if (this.MercatorProjection) {
+				var offset = this.root.width() - this.options.offset;
+
+				var point = new google.maps.Point(offset / 2, this.root.height() / 2);
+				var latLng = this.MercatorProjection.PixelToLatLng(point);
+				this.map.panTo(latLng);
+
+				this.MapCenter = latLng;
+			}
+		}
+	}]);
+
+	return GoogleMap;
+})();
+
+var MercatorProjection = (function () {
+	function MercatorProjection(map) {
+		_classCallCheck(this, MercatorProjection);
+
+		this.map = map;
+		this.mapOverlay = new google.maps.OverlayView();
+		this.mapOverlay.draw = function () {};
+
+		this.pixelOrigin_ = new google.maps.Point(TILE_SIZE / 2, TILE_SIZE / 2);
+
+		this._ready();
+	}
+
+	/**
+  * Specified LatLng value is used to calculate pixel coordinates and
+  * update the control display. Container is also repositioned.
+  * @param {google.maps.LatLng} latLng Position to display
+  */
+
+	_createClass(MercatorProjection, [{
+		key: 'LatLngToPixel',
+		value: function LatLngToPixel(latLng) {
+			var projection = this.mapOverlay.getProjection();
+			var point = projection.fromLatLngToContainerPixel(latLng);
+			return point;
+		}
+
+		/**
+   * Specified LatLng value is used to calculate pixel coordinates and
+   * update the control display. Container is also repositioned.
+   * @param {google.maps.Point} Point Position to display
+   */
+	}, {
+		key: 'PixelToLatLng',
+		value: function PixelToLatLng(point) {
+			var projection = this.mapOverlay.getProjection();
+			var newPoint = projection.fromContainerPixelToLatLng(point);
+
+			return newPoint;
+		}
+	}, {
+		key: '_ready',
+		value: function _ready() {
+			this.mapOverlay.setMap(this.options.map);
+		}
+	}]);
+
+	return MercatorProjection;
+})();
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x3, _x4, _x5) { var _again = true; _function: while (_again) { var object = _x3, property = _x4, receiver = _x5; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x3 = parent; _x4 = property; _x5 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var MainSlider = (function (_Component) {
+	_inherits(MainSlider, _Component);
+
+	function MainSlider() {
+		var root = arguments.length <= 0 || arguments[0] === undefined ? $ : arguments[0];
+		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+		_classCallCheck(this, MainSlider);
+
+		var defaultOptions = {};
+
+		_get(Object.getPrototypeOf(MainSlider.prototype), 'constructor', this).call(this, root, _.merge(options || {}, defaultOptions, _.defaults));
+
+		//$$.Emitter.call(this);
+	}
+
+	_createClass(MainSlider, [{
+		key: '_cacheNodes',
+		value: function _cacheNodes() {
+			this.nodes = {
+				slides: this.root.find('.slide'),
+				arrows: this.root.find('.slide-button'),
+				pagination: this.root.find('.pagination')
+			};
+		}
+	}, {
+		key: '_ready',
+		value: function _ready() {
+			this._resizeSlider();
+			this._initSpring();
+
+			this.slidesLength = this.nodes.slides.length;
+			this.nodes.pagination.append('<ul />');
+
+			for (var i = 1; i <= this.slidesLength; i++) {
+				this.nodes.pagination.find('ul').append('<li/>');
+			}
+
+			this.nodes.pagination = this.nodes.pagination.find('li');
+			this.index = 0;
+
+			this.nodes.pagination.eq(this.index).addClass('active');
+		}
+	}, {
+		key: '_bindEvents',
+		value: function _bindEvents() {
+			var _this = this;
+
+			this.on('slideChange', _.bind(function () {
+				this.nodes.pagination.eq(this.index).siblings().removeClass('active');
+				this.nodes.pagination.eq(this.index).addClass('active');
+			}, this));
+
+			this.nodes.arrows.on('click', event = function (event) {
+				var item = $(event.currentTarget);
+
+				var newIndex = _this.index + item.data('direction');
+
+				if (newIndex < 0) {
+					newIndex = _this.slidesLength - 1;
+				} else if (newIndex > _this.slidesLength - 1) {
+					newIndex = 0;
+				}
+
+				if (item.data('direction') > 0) {
+					_this.nodes.slides.eq(_this.index).data('spring').target(-1);
+
+					_this.nodes.slides.eq(newIndex).data('spring').position(1);
+					_this.nodes.slides.eq(newIndex).data('spring').target(0);
+				} else {
+					_this.nodes.slides.eq(_this.index).data('spring').target(1);
+
+					_this.nodes.slides.eq(newIndex).data('spring').position(-1);
+					_this.nodes.slides.eq(newIndex).data('spring').target(0);
+				}
+
+				_this.index = newIndex;
+
+				_this.emit('slideChange');
+			});
+
+			this.nodes.pagination.on('click', event = function (event) {
+				var item = $(event.currentTarget);
+
+				if (_this.index == item.index()) {
+					return;
+				}
+
+				_this.setIndex(_this.index, item.index());
+			});
+		}
+	}, {
+		key: 'slideRight',
+		value: function slideRight(index, newIndex) {
+			this.nodes.slides.eq(index).data('spring').target(-1);
+
+			this.nodes.slides.eq(newIndex).data('spring').position(1);
+			this.nodes.slides.eq(newIndex).data('spring').target(0);
+		}
+	}, {
+		key: 'slideLeft',
+		value: function slideLeft(index, newIndex) {
+			this.nodes.slides.eq(this.index).data('spring').target(1);
+
+			this.nodes.slides.eq(newIndex).data('spring').position(-1);
+			this.nodes.slides.eq(newIndex).data('spring').target(0);
+		}
+	}, {
+		key: '_initSpring',
+		value: function _initSpring() {
+			this.nodes.slides.each(function (index) {
+				var item = $(this);
+
+				var spring = new $$.Simulation.Spring({
+					rigidness: 100,
+					damping: 1.5,
+					target: 1,
+					position: 1,
+					targetLimits: [-1, 1],
+					step: function step() {
+						var position = Math.round(this.position() * 1000) / 1000;
+
+						item.css({
+							left: 100 * position + '%'
+						});
+					}
+				});
+
+				item.data('spring', spring);
+			});
+
+			if (this.nodes.slides.eq(0).data() != undefined) {
+				this.nodes.slides.eq(0).data('spring').position(0);
+				this.nodes.slides.eq(0).data('spring').target(0);
+			}
+		}
+	}, {
+		key: 'setIndex',
+		value: function setIndex(index, newIndex) {
+			if (index > newIndex) {
+				this.slideLeft(index, newIndex);
+			} else {
+				this.slideRight(index, newIndex);
+			}
+
+			this.nodes.pagination.eq(newIndex).siblings().removeClass('active');
+			this.nodes.pagination.eq(newIndex).addClass('active');
+			this.index = newIndex;
+		}
+	}, {
+		key: '_resizeSlider',
+		value: function _resizeSlider() {
+			var startWidth = 1420;
+			var fontSize = 16;
+
+			$('window').resize(_.bind(function () {
+				var currentWidth = $$.window.width() + $$.ScrollWidth();
+
+				if ($('window').width() >= 1420) {
+					var ratio = 1420 / startWidth * 100 / 100;
+
+					this.root.css({
+						fontSize: fontSize * ratio + 'px'
+					});
+
+					return;
+				}
+
+				if ($('window').width() <= 960) {
+					var ratio = 960 / startWidth * 100 / 100;
+
+					this.root.css({
+						fontSize: fontSize * ratio + 'px'
+					});
+
+					return;
+				}
+
+				var ratio = currentWidth / startWidth * 100 / 100;
+
+				this.root.css({
+					fontSize: fontSize * ratio + 'px'
+				});
+			}, this));
+
+			$('window').resize();
+		}
+	}]);
+
+	return MainSlider;
+})(Component);
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var $$ = $$ || {};
+
+var Application = (function () {
+	function Application() {
+		_classCallCheck(this, Application);
+
+		this._initGoogleMap();
+	}
+
+	_createClass(Application, [{
+		key: '_initGoogleMap',
+		value: function _initGoogleMap() {
+			$('.b-map').each(function () {
+				$$.googleMap = new GoogleMap(mapBlock);
+			});
+		}
+	}]);
+
+	return Application;
+})();
+
+$(function () {
+	$$.application = new Application();
+});
+//# sourceMappingURL=app.js.map
