@@ -13,7 +13,7 @@ $$.Model.Tables = class ModelTables {
 	initialize () {
 		"use strict";
 
-		this.getTable();
+		this.getTables();
 
 		this.root.html(this.template);
 	}
@@ -28,7 +28,7 @@ $$.Model.Tables = class ModelTables {
 		this.template = `<h1>Tables</h1>`;
 	}
 
-	getTable () {
+	getTables () {
 		"use strict";
 
 		$.ajax({

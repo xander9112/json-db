@@ -123,6 +123,19 @@ $$.Model.Table = (function () {
 			this.getTable();
 
 			this.root.html(this.template);
+
+			this.root.on('submit', 'form', function (event) {
+				event.preventDefault();
+				var form = $(event.currentTarget);
+
+				$.ajax({
+					type: 'POST',
+					url: 'core/TableSave.php',
+					data: {
+						form: form.serialize()
+					}
+				});
+			});
 		}
 	}, {
 		key: 'destroy',
@@ -134,7 +147,7 @@ $$.Model.Table = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '<h1>' + this.options.tableName + '</h1>';
+			this.template = '<h1>' + this.options.tableName + '</h1>\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<form action="core/TableSave.php" method="POST">\n\t\t\t\t\t\t\t<table>\n\t\t\t\t\t\t        <thead>\n\t\t\t\t\t\t        </thead>\n\t\t\t\t\t\t        <tbody>\n\t\t\t\t\t\t        </tbody>\n\t\t\t\t            </table>\n\t\t\t            </form>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
 		}
 	}, {
 		key: 'getTable',
@@ -146,15 +159,28 @@ $$.Model.Table = (function () {
 			$.ajax({
 				type: 'POST',
 				url: 'core/Table.php',
+				data: {
+					tableName: this.options.tableName
+				},
 				success: function success(response) {
 					response = $.parseJSON(response);
-					console.log(response);
 
-					var list = $('<ul class="collection with-header"></ul>').appendTo(_this.root);
+					_.each(response[0], function (value, key) {
+						_this.root.find('table thead').append('<th data-field="' + key + '">' + key + '</th>');
+					});
 
 					response.forEach(function (table) {
-						list.append('<a href="tables/' + table + '" class="collection-item">' + table + '</a>');
+						var tr = $('<tr />').appendTo(_this.root.find('table tbody'));
+
+						_.each(table, function (value, key) {
+							tr.append('<td><div class="input-field"><input type="text" value="' + value + '" /></div></td>');
+						});
+
+						//list.append(`<a href="tables/${table}" class="collection-item">${table}</a>`);
 					});
+
+					var tr = $('<tr />').appendTo(_this.root.find('table tbody'));
+					tr.append('<td><div class="input-field"><input type="submit" value="Сохранить" /></div></td>');
 				}
 			});
 		}
@@ -189,7 +215,7 @@ $$.Model.Tables = (function () {
 		value: function initialize() {
 			"use strict";
 
-			this.getTable();
+			this.getTables();
 
 			this.root.html(this.template);
 		}
@@ -206,8 +232,8 @@ $$.Model.Tables = (function () {
 			this.template = '<h1>Tables</h1>';
 		}
 	}, {
-		key: 'getTable',
-		value: function getTable() {
+		key: 'getTables',
+		value: function getTables() {
 			"use strict";
 
 			var _this = this;

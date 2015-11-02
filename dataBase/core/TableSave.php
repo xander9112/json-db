@@ -6,6 +6,6 @@ require $url_prefix . "/JsonDB.class.php";
 $scanned_directory = array_diff(scandir($dbPath), array('..', '.'));
 
 $db = new JsonDB($dbPath);
-$table = $db->selectAll($_POST['tableName']);
+//$table = $db->selectAll($_POST['tableName']);
 
-echo json_encode($table);
+echo json_encode($_POST);
