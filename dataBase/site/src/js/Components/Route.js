@@ -14,35 +14,40 @@ $$.Component.Route = class Route {
 	}
 
 	_registerRoutes () {
+		page.base('/dataBase');
+
 		page('/', (options) => {
 			"use strict";
 			options.pathname = '/index';
 			this._initModel(options);
 		});
 
-		page('/boards', (options) => {
+		page('/tables', (options) => {
 			"use strict";
 			this._initModel(options);
 		});
 
-		page('/boards/:board_id', (options) => {
+		page('/tables/:tableName', (options) => {
 			"use strict";
 			this._initModel(options);
 		});
 
 		page('*', (options) => {
 			"use strict";
+
 			options.pathname = '/notFound';
 			this._initModel(options);
 		});
 
-		page();
+		page({
+			hashbang: true
+		});
 	}
 
 	_initModel (options) {
 		"use strict";
 
-		var pathname = options.pathname.split('/')[1];
+		var pathname = options.path.split('/')[1];
 
 		var modelName = pathname.charAt(0).toUpperCase() + pathname.substr(1);
 

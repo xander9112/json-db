@@ -22,13 +22,7 @@ $$.Application = class Application {
 	 * @private
 	 */
 	_createComponents () {
-		this._authorizeTrello();
-
 		this.siteMenu = new $$.Component.Menu($('.js-application > header'));
-
-		this.user = new $$.Component.User({
-			menu: this.siteMenu
-		});
 
 		this.route = new $$.Component.Route($('body'), {
 			menu: this.siteMenu
@@ -37,26 +31,6 @@ $$.Application = class Application {
 
 	_initialize () {
 
-	}
-
-	_authorizeTrello () {
-		var authenticationSuccess = function () {
-			console.log("Successful authentication");
-		};
-		var authenticationFailure = function () {
-			console.log("Failed authentication");
-		};
-
-		Trello.authorize({
-			type: "redirect",
-			name: "Getting Started Application",
-			scope: {
-				read: true,
-				write: true
-			},
-			authenticationSuccess,
-			authenticationFailure
-		});
 	}
 };
 
