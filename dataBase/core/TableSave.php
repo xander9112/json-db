@@ -8,4 +8,12 @@ $scanned_directory = array_diff(scandir($dbPath), array('..', '.'));
 $db = new JsonDB($dbPath);
 //$table = $db->selectAll($_POST['tableName']);
 
-echo json_encode($_POST);
+$tableName = $_POST['tableName'];
+$data = json_decode($_POST['data']);
+
+foreach ($data as $key) {
+	print_r(key($value));
+}
+die();
+
+$db->updateAll($tableName, $data);

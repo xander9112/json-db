@@ -32,8 +32,8 @@ $$.Model.Tables = class ModelTables {
 		"use strict";
 
 		$.ajax({
-			type: 'POST',
-			url: 'core/Table.php',
+			type:    'POST',
+			url:     'core/Tables.php',
 			success: (response) => {
 				response = $.parseJSON(response);
 				console.log(response);

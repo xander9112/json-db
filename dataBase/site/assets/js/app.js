@@ -101,10 +101,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 var $$ = $$ || {};
 
 $$.Model.Table = (function () {
-	function ModelTable(root, options) {
+	function ModelTable() {
 		"use strict";
 
-		if (root === undefined) root = $('main');
+		var root = arguments.length <= 0 || arguments[0] === undefined ? $('main') : arguments[0];
+		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
 		_classCallCheck(this, ModelTable);
 
@@ -120,22 +121,61 @@ $$.Model.Table = (function () {
 		value: function initialize() {
 			"use strict";
 
+			/*this.root.html(`
+    <form data-bind="submit: addTask">
+    Add task: <input data-bind="value: newTaskText" placeholder="What needs to be done?" />
+    <button type="submit">Add</button>
+    </form>
+   		 <ul data-bind="foreach: tasks, visible: tasks().length > 0">
+    <li>
+    <input type="checkbox" data-bind="checked: isDone" />
+    <input data-bind="value: title, disable: isDone" />
+    <a href="#" data-bind="click: $parent.removeTask">Delete</a>
+    </li>
+    </ul>
+   		 You have <b data-bind="text: incompleteTasks().length">&nbsp;</b> incomplete task(s)
+    <span data-bind="visible: incompleteTasks().length == 0"> - it's beer time!</span>
+    `);
+   		 function Task (data) {
+    this.title = ko.observable(data.title);
+    this.isDone = ko.observable(data.isDone);
+    }
+   		 function TaskListViewModel () {
+    // Data
+    var self = this;
+    self.tasks = ko.observableArray([]);
+    self.newTaskText = ko.observable();
+    self.incompleteTasks = ko.computed(function () {
+    return ko.utils.arrayFilter(self.tasks(), function (task) {
+    return !task.isDone()
+    });
+    });
+   		 // Operations
+    self.addTask = function () {
+    self.tasks.push(new Task({ title: this.newTaskText() }));
+    self.newTaskText("");
+    };
+    self.removeTask = function (task) {
+    self.tasks.remove(task)
+    };
+    }
+   		 ko.applyBindings(new TaskListViewModel());*/
+
 			this.getTable();
 
 			this.root.html(this.template);
 
-			this.root.on('submit', 'form', function (event) {
-				event.preventDefault();
-				var form = $(event.currentTarget);
-
-				$.ajax({
-					type: 'POST',
-					url: 'core/TableSave.php',
-					data: {
-						form: form.serialize()
-					}
-				});
-			});
+			/*this.root.on('submit', 'form', (event) => {
+   	event.preventDefault();
+   	var form = $(event.currentTarget);
+   			$.ajax({
+   		type: 'POST',
+   		url:  'core/TableSave.php',
+   		data: {
+   			form: form.serialize()
+   		}
+   	});
+   });*/
 		}
 	}, {
 		key: 'destroy',
@@ -147,7 +187,7 @@ $$.Model.Table = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '<h1>' + this.options.tableName + '</h1>\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<form action="core/TableSave.php" method="POST">\n\t\t\t\t\t\t\t<table>\n\t\t\t\t\t\t        <thead>\n\t\t\t\t\t\t        </thead>\n\t\t\t\t\t\t        <tbody>\n\t\t\t\t\t\t        </tbody>\n\t\t\t\t            </table>\n\t\t\t            </form>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
+			this.template = '<h1>' + this.options.tableName + '</h1>\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable">\n\t\t\t\t\t\t\t<table>\n\n\t\t\t\t            </table>\n\t\t\t\t            <input type="submit" value="save">\n\t\t\t            </form>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
 		}
 	}, {
 		key: 'getTable',
@@ -165,22 +205,53 @@ $$.Model.Table = (function () {
 				success: function success(response) {
 					response = $.parseJSON(response);
 
+					var names = '';
+
 					_.each(response[0], function (value, key) {
-						_this.root.find('table thead').append('<th data-field="' + key + '">' + key + '</th>');
+						names += '<th data-' + key + '="' + key + '">' + key + '</th>';
 					});
 
-					response.forEach(function (table) {
-						var tr = $('<tr />').appendTo(_this.root.find('table tbody'));
+					_this.root.find('table').append('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + names + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t');
+					var records = '';
 
-						_.each(table, function (value, key) {
-							tr.append('<td><div class="input-field"><input type="text" value="' + value + '" /></div></td>');
+					_.each(response[0], function (value, key) {
+						records += '<td><input data-bind="value: ' + key + '" /></td>';
+					});
+
+					_this.root.find('table').append('\n\t\t\t\t \t\t\t<tbody data-bind="foreach: names">\n\t\t\t\t \t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + records + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t');
+
+					function SeatReservation(key, value) {
+						var self = this;
+						self[key] = value;
+					}
+
+					function ReservationsViewModel(response) {
+						var self = this;
+
+						self.names = ko.observableArray([]);
+
+						response.forEach(function (record) {
+							self.names.push(record);
 						});
 
-						//list.append(`<a href="tables/${table}" class="collection-item">${table}</a>`);
-					});
+						self.saveTable = function () {
+							//console.log(ko.toJS(self.names));
+							//return
+							$.ajax({
+								type: 'POST',
+								url: 'core/TableSave.php',
+								data: {
+									tableName: 'catalog',
+									data: ko.toJSON(self.names)
+								},
+								success: function success(response) {
+									console.log(response);
+								}
+							});
+						};
+					}
 
-					var tr = $('<tr />').appendTo(_this.root.find('table tbody'));
-					tr.append('<td><div class="input-field"><input type="submit" value="Сохранить" /></div></td>');
+					ko.applyBindings(new ReservationsViewModel(response));
 				}
 			});
 		}
@@ -240,7 +311,7 @@ $$.Model.Tables = (function () {
 
 			$.ajax({
 				type: 'POST',
-				url: 'core/Table.php',
+				url: 'core/Tables.php',
 				success: function success(response) {
 					response = $.parseJSON(response);
 					console.log(response);
