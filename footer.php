@@ -1,11 +1,5 @@
-</div>
-<div class="p-footer">
 
-</div>
-</div>
-
-
-<script src="../site/assets/js/vendor-bundle.js"></script>
-<script src="../site/assets/js/app.js"></script>
+<script src="<?=$url_prefix?>/site/assets/js/vendor-bundle.js"></script>
+<script src="<?=$url_prefix?>/site/assets/js/app.js"></script>
 </body>
 </html>

@@ -23,11 +23,9 @@ $$.Component.Menu = class ComponentMenu {
 		this.template = $(`
 			<nav>
 		        <div class="nav-wrapper">
-			      <a href="/" class="brand-logo">Trello</a>
+			      <a href="/dataBase" class="brand-logo">DataBase</a>
 			      <ul id="nav-mobile" class="right hide-on-med-and-down">
-			        <li><a href="/boards">Boards</a></li>
-			        <li><a href="/fsfasfas">fsfasfas</a></li>
-			        <li><a href="collapsible.html">JavaScript</a></li>
+			        <li><a href="tables">Tables</a></li>
 			      </ul>
 			    </div>
 		    </nav>`);
