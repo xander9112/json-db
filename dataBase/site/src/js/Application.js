@@ -1,5 +1,18 @@
 var $$ = $$ || {};
 
+/**
+ * Создать типы полей
+ *
+ * integer
+ * string
+ * boolean
+ * text
+ * image
+ *
+ * @type {Application}
+ */
+
+
 $$.Application = class Application {
 	constructor () {
 		this.currentPage = undefined;

@@ -599,6 +599,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $$ = $$ || {};
 
+/**
+ * Создать типы полей
+ *
+ * integer
+ * string
+ * boolean
+ * text
+ * image
+ *
+ * @type {Application}
+ */
+
 $$.Application = (function () {
 	function Application() {
 		_classCallCheck(this, Application);
