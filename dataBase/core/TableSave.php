@@ -10,10 +10,13 @@ $db = new JsonDB($dbPath);
 
 $tableName = $_POST['tableName'];
 $data = json_decode($_POST['data']);
+$data = $_POST['data'];
 
-foreach ($data as $key) {
+var_dump($data, true);
+
+/*foreach ($data as $key) {
 	print_r(key($value));
-}
+}*/
 die();
 
 $db->updateAll($tableName, $data);
