@@ -3,7 +3,8 @@
 $$ = $$ || {};
 
 $$.Model = $$.Model || {};
-$$.Component = $$.Component || {};;
+$$.Component = $$.Component || {};
+$$.FieldType = $$.FieldType || {};;
 'use strict';
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -111,6 +112,7 @@ $$.Model.Table = (function () {
 
 		this.options = options;
 		this.root = root === '' ? $('main') : root;
+		this.model = {};
 
 		this._template();
 		this.initialize();
@@ -121,61 +123,9 @@ $$.Model.Table = (function () {
 		value: function initialize() {
 			"use strict";
 
-			/*this.root.html(`
-    <form data-bind="submit: addTask">
-    Add task: <input data-bind="value: newTaskText" placeholder="What needs to be done?" />
-    <button type="submit">Add</button>
-    </form>
-   		 <ul data-bind="foreach: tasks, visible: tasks().length > 0">
-    <li>
-    <input type="checkbox" data-bind="checked: isDone" />
-    <input data-bind="value: title, disable: isDone" />
-    <a href="#" data-bind="click: $parent.removeTask">Delete</a>
-    </li>
-    </ul>
-   		 You have <b data-bind="text: incompleteTasks().length">&nbsp;</b> incomplete task(s)
-    <span data-bind="visible: incompleteTasks().length == 0"> - it's beer time!</span>
-    `);
-   		 function Task (data) {
-    this.title = ko.observable(data.title);
-    this.isDone = ko.observable(data.isDone);
-    }
-   		 function TaskListViewModel () {
-    // Data
-    var self = this;
-    self.tasks = ko.observableArray([]);
-    self.newTaskText = ko.observable();
-    self.incompleteTasks = ko.computed(function () {
-    return ko.utils.arrayFilter(self.tasks(), function (task) {
-    return !task.isDone()
-    });
-    });
-   		 // Operations
-    self.addTask = function () {
-    self.tasks.push(new Task({ title: this.newTaskText() }));
-    self.newTaskText("");
-    };
-    self.removeTask = function (task) {
-    self.tasks.remove(task)
-    };
-    }
-   		 ko.applyBindings(new TaskListViewModel());*/
-
 			this.getTable();
 
 			this.root.html(this.template);
-
-			/*this.root.on('submit', 'form', (event) => {
-   	event.preventDefault();
-   	var form = $(event.currentTarget);
-   			$.ajax({
-   		type: 'POST',
-   		url:  'core/TableSave.php',
-   		data: {
-   			form: form.serialize()
-   		}
-   	});
-   });*/
 		}
 	}, {
 		key: 'destroy',
@@ -187,14 +137,109 @@ $$.Model.Table = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '<h1>' + this.options.tableName + '</h1>\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable">\n\t\t\t\t\t\t\t<table>\n\n\t\t\t\t            </table>\n\t\t\t\t            <input type="submit" value="save">\n\t\t\t            </form>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
+			this.form = '\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable">\n\t\t\t\t<table></table>\n\t\t        <button type="submit" class="waves-effect waves-light btn">Сохранить</button>\n\t\t\t\t<button class="waves-effect waves-light btn right" data-bind="click: addRecord">Добавить</button>\n\t\t\t</form>';
+
+			this.template = '\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<h1>' + this.options.tableName + '</h1>\n\t\t\t\t\t\t' + this.form + '\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
+		}
+	}, {
+		key: 'createTable',
+		value: function createTable(response) {
+			"use strict";
+			var names = '';
+			var _this = this;
+			_.each(response[0], function (object, key) {
+				names += '<th data-' + key + '="' + object.fieldType + '">' + key + '</th>';
+			});
+
+			names += '<th></th>';
+
+			this.root.find('table').append('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + names + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t');
+			var records = '';
+
+			_.each(response[0], function (object, key) {
+				var html = new $$.FieldType[object.fieldType]({
+					bindKey: key + '.value',
+					uniqueId: _.uniqueId(object.fieldType + '_')
+				});
+
+				records += '<td>' + html.template + '</td>';
+			});
+
+			records += '<td><a class="waves-effect waves-light btn red"><i class="material-icons">delete</i></a></td>';
+
+			this.root.find('table').append('\n\t\t\t\t \t\t\t<tbody data-bind="foreach: names">\n\t\t\t\t \t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + records + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t');
+
+			function SeatReservation(key, value) {
+				var self = this;
+				self[key] = value;
+			}
+
+			function ReservationsViewModel(response) {
+				var self = this;
+
+				self.names = ko.observableArray([]);
+
+				response.forEach(function (record) {
+					self.names.push(record);
+				});
+
+				self.saveTable = function () {
+					$.ajax({
+						type: 'POST',
+						url: 'core/TableSave.php',
+						data: {
+							tableName: _this.options.tableName,
+							data: ko.toJSON(self.names)
+						},
+						success: function success(response) {
+							response = $.parseJSON(response);
+
+							if (response.success) {
+								Materialize.toast('Таблица успешно обновлена', 2000); // 4000 is the duration of the toast
+							}
+						}
+					});
+				};
+
+				self.addRecord = function () {
+					console.log('addRecord');
+					/*$.ajax({
+      type: 'POST',
+      url: 'core/TableSave.php',
+      data: {
+      tableName: 'catalog',
+      data: ko.toJSON(self.names)
+      },
+      success: (response) => {
+      console.log(response);
+      }
+      });*/
+				};
+
+				self.deleteRecord = function () {
+					console.log('deleteRecord');
+					/*$.ajax({
+      type: 'POST',
+      url: 'core/TableSave.php',
+      data: {
+      tableName: 'catalog',
+      data: ko.toJSON(self.names)
+      },
+      success: (response) => {
+      console.log(response);
+      }
+      });*/
+				};
+			}
+
+			ko.applyBindings(new ReservationsViewModel(response));
 		}
 	}, {
 		key: 'getTable',
 		value: function getTable() {
 			"use strict";
 
-			var _this = this;
+			var _this2 = this;
 
 			$.ajax({
 				type: 'POST',
@@ -205,53 +250,7 @@ $$.Model.Table = (function () {
 				success: function success(response) {
 					response = $.parseJSON(response);
 
-					var names = '';
-
-					_.each(response[0], function (value, key) {
-						names += '<th data-' + key + '="' + key + '">' + key + '</th>';
-					});
-
-					_this.root.find('table').append('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + names + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t');
-					var records = '';
-
-					_.each(response[0], function (value, key) {
-						records += '<td><input data-bind="value: ' + key + '" /></td>';
-					});
-
-					_this.root.find('table').append('\n\t\t\t\t \t\t\t<tbody data-bind="foreach: names">\n\t\t\t\t \t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + records + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t');
-
-					function SeatReservation(key, value) {
-						var self = this;
-						self[key] = value;
-					}
-
-					function ReservationsViewModel(response) {
-						var self = this;
-
-						self.names = ko.observableArray([]);
-
-						response.forEach(function (record) {
-							self.names.push(record);
-						});
-
-						self.saveTable = function () {
-							//console.log(ko.toJS(self.names));
-							//return
-							$.ajax({
-								type: 'POST',
-								url: 'core/TableSave.php',
-								data: {
-									tableName: 'catalog',
-									data: ko.toJSON(self.names)
-								},
-								success: function success(response) {
-									console.log(response);
-								}
-							});
-						};
-					}
-
-					ko.applyBindings(new ReservationsViewModel(response));
+					_this2.createTable(response);
 				}
 			});
 		}
@@ -327,6 +326,190 @@ $$.Model.Tables = (function () {
 	}]);
 
 	return ModelTables;
+})();;
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+$$.FieldType.Boolean = (function () {
+	function FieldTypeBoolean() {
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+		_classCallCheck(this, FieldTypeBoolean);
+
+		this.options = {
+			column: 's12',
+			label: 'Integer',
+			bindKey: '',
+			uniqueId: _.uniqueId('prefix_')
+		};
+
+		_.assign(this.options, options);
+		this._template();
+	}
+
+	_createClass(FieldTypeBoolean, [{
+		key: '_template',
+		value: function _template() {
+			"use strict";
+
+			this.template = '\n\t\t\t<div class="switch">\n\t\t\t    <label for="' + this.options.uniqueId + '">\n\t\t\t      Off\n\t\t\t      <input type="checkbox" id="' + this.options.uniqueId + '" data-bind="checked: ' + this.options.bindKey + '">\n\t\t\t      <span class="lever"></span>\n\t\t\t      On\n\t\t\t    </label>\n\t\t    </div>';
+		}
+	}]);
+
+	return FieldTypeBoolean;
+})();;
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+$$.FieldType.Integer = (function () {
+	function FieldTypeInteger() {
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+		_classCallCheck(this, FieldTypeInteger);
+
+		this.options = {
+			column: 's12',
+			label: 'Integer',
+			bindKey: '',
+			uniqueId: _.uniqueId('prefix_')
+		};
+
+		_.assign(this.options, options);
+
+		this._template();
+	}
+
+	_createClass(FieldTypeInteger, [{
+		key: '_template',
+		value: function _template() {
+			"use strict";
+
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+		}
+	}]);
+
+	return FieldTypeInteger;
+})();;
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+$$.FieldType.Media = (function () {
+	function FieldTypeMedia() {
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+		_classCallCheck(this, FieldTypeMedia);
+
+		this.options = {
+			column: 's12',
+			label: 'Media',
+			bindKey: '',
+			uniqueId: _.uniqueId('prefix_')
+		};
+
+		_.assign(this.options, options);
+
+		this._template();
+	}
+
+	_createClass(FieldTypeMedia, [{
+		key: '_template',
+		value: function _template() {
+			"use strict";
+
+			var id = _.uniqueId('input_');
+
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+		}
+	}]);
+
+	return FieldTypeMedia;
+})();;
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+$$.FieldType.String = (function () {
+	function FieldTypeString() {
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+		_classCallCheck(this, FieldTypeString);
+
+		this.options = {
+			column: 's12',
+			label: 'String',
+			bindKey: '',
+			uniqueId: _.uniqueId('prefix_')
+		};
+
+		_.assign(this.options, options);
+
+		this._template();
+	}
+
+	_createClass(FieldTypeString, [{
+		key: '_template',
+		value: function _template() {
+			"use strict";
+
+			var id = _.uniqueId('input_');
+
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+		}
+	}]);
+
+	return FieldTypeString;
+})();;
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+$$.FieldType.Text = (function () {
+	function FieldTypeText() {
+		var options = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+
+		_classCallCheck(this, FieldTypeText);
+
+		this.options = {
+			column: 's12',
+			label: 'Textarea',
+			bindKey: '',
+			uniqueId: _.uniqueId('prefix_')
+		};
+
+		_.assign(this.options, options);
+
+		this._template();
+	}
+
+	_createClass(FieldTypeText, [{
+		key: '_template',
+		value: function _template() {
+			"use strict";
+
+			var id = _.uniqueId('textarea_');
+
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <textarea id="' + this.options.uniqueId + '" class="materialize-textarea" data-bind="value: ' + this.options.bindKey + '"></textarea>\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+
+			/*$(`#${id}`).on('change', function () {
+    $(this).trigger('autoresize');
+    });*/
+		}
+	}]);
+
+	return FieldTypeText;
 })();;
 "use strict";
 

@@ -9,7 +9,7 @@ gulp.task('scripts.app', function () {
 		//'site/src/js/utils/*.js',
 		'site/src/js/Base.js',
 		'site/src/js/Models/**/*.js',
-		'site/src/js/Components/*.js',
+		'site/src/js/Components/**/*.js',
 		'site/src/js/Pages/*.js',
 		'site/src/js/Application.js'
 	])

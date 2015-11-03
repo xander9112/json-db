@@ -10,6 +10,6 @@ $db = new JsonDB($dbPath);
 $tableName = $_POST['tableName'];
 $data = json_decode($_POST['data']);
 
-if ($db->updateAll($tableName, $data)) {
-    echo json_encode(array("success" => TRUE));
-}
+$db->insert("table", $data, $create = FALSE);
+
+$db->updateAll($tableName, $data);

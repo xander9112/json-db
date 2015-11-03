@@ -46,6 +46,7 @@ class JsonTable
             }
         }
         $this->jsonFile = $_jsonFile;
+
         $this->fileData = json_decode(file_get_contents($this->jsonFile), true);
         $this->lockFile();
     }
@@ -94,7 +95,8 @@ class JsonTable
     public function updateAll($data = array())
     {
         if (isset($data[0]) && substr_compare($data[0], $this->jsonFile, 0)) $data = $data[1];
-        return $this->fileData = array($data);
+//        return $this->fileData = array($data);
+        return $this->fileData = $data;
     }
 
     public function update($key, $val = 0, $newData = array())
