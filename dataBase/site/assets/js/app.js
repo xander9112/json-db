@@ -105,6 +105,8 @@ $$.Model.Table = (function () {
 	function ModelTable() {
 		"use strict";
 
+		var _this2 = this;
+
 		var root = arguments.length <= 0 || arguments[0] === undefined ? $('main') : arguments[0];
 		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
 
@@ -113,6 +115,11 @@ $$.Model.Table = (function () {
 		this.options = options;
 		this.root = root === '' ? $('main') : root;
 		this.model = {};
+		this.fieldsType = [];
+
+		_.each($$.FieldType, function (value, key) {
+			_this2.fieldsType.push(key);
+		});
 
 		this._template();
 		this.initialize();
@@ -123,9 +130,24 @@ $$.Model.Table = (function () {
 		value: function initialize() {
 			"use strict";
 
-			this.getTable();
+			/**
+    * TODO: Связать всё в одну модель и настройки и вывод таблицы
+    */
 
-			this.root.html(this.template);
+			var _this3 = this;
+
+			this.getTable().then(function (response) {
+				response = $.parseJSON(response);
+
+				if (response.success) {
+					_this3.root.html(_this3.template);
+					_this3.createTable(response.data);
+				} else {
+					_this3.root.html(_this3.settings);
+					$('#modal_1').openModal();
+					_this3.tableSettings();
+				}
+			});
 		}
 	}, {
 		key: 'destroy',
@@ -137,6 +159,8 @@ $$.Model.Table = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
+			this.settings = '\n\t\t<div id="modal_1" class="modal">\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: updateTable">\n\t\t\t\t<div class="modal-content">\n\t\t\t\t  <h4>Настройка таблицы</h4>\n\t\t\t\t\t<div class="row" data-bind="foreach: fields">\n\t\t\t\t\t\t<div class="input-field col s6">\n\t\t\t\t\t\t  <input placeholder="Название поля" id="field_name_$index" data-bind="value: name" type="text" class="validate">\n\t\t\t\t\t\t  <label for="field_name_$index">Название поля</label>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="input-field col s6">\n\t\t\t\t\t\t\t<select data-bind="options: types, selectedOptions: chosenType"></select>\n\t\t\t\t\t\t\t<label>Тип поля</label>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t<button type="submit" class="waves-effect waves-green btn-flat">Сохранить</button>\n\t\t\t\t\t<a class="waves-effect waves-green btn-flat" data-bind="click: addField">Добавить поле</a>\n\t\t\t\t</div>\n\t\t\t</form>\n\t \t</div>';
+
 			this.form = '\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable">\n\t\t\t\t<table></table>\n\t\t        <button type="submit" class="waves-effect waves-light btn">Сохранить</button>\n\t\t\t\t<button class="waves-effect waves-light btn right" data-bind="click: addRecord">Добавить</button>\n\t\t\t</form>';
 
 			this.template = '\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<h1>' + this.options.tableName + '</h1>\n\t\t\t\t\t\t' + this.form + '\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
@@ -145,42 +169,51 @@ $$.Model.Table = (function () {
 		key: 'createTable',
 		value: function createTable(response) {
 			"use strict";
+
+			var _this4 = this;
+
 			var names = '';
 			var _this = this;
+			this.modelKeys = [];
 			_.each(response[0], function (object, key) {
 				names += '<th data-' + key + '="' + object.fieldType + '">' + key + '</th>';
+				_this4.modelKeys.push(key);
+
+				_this4.model[key] = {
+					value: '',
+					fieldType: ''
+				};
 			});
 
-			names += '<th></th>';
-
-			this.root.find('table').append('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + names + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t');
 			var records = '';
 
 			_.each(response[0], function (object, key) {
+				var id = _.uniqueId(object.fieldType + '_');
+
 				var html = new $$.FieldType[object.fieldType]({
 					bindKey: key + '.value',
-					uniqueId: _.uniqueId(object.fieldType + '_')
+					uniqueId: id
 				});
 
 				records += '<td>' + html.template + '</td>';
 			});
 
-			records += '<td><a class="waves-effect waves-light btn red"><i class="material-icons">delete</i></a></td>';
+			records += '<td><a class="waves-effect waves-light btn red" data-bind="click: $parent.deleteRecord"><i class="material-icons">delete</i></a></td>';
 
-			this.root.find('table').append('\n\t\t\t\t \t\t\t<tbody data-bind="foreach: names">\n\t\t\t\t \t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + records + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</tbody>\n\t\t\t\t\t\t\t');
-
-			function SeatReservation(key, value) {
-				var self = this;
-				self[key] = value;
-			}
+			this.root.find('table').html('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + names + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t<tbody data-bind="foreach: names">\n\t\t \t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t \t' + records + '\n\t\t\t\t\t\t\t\t </tr>\n\t\t\t\t\t\t\t </tbody>\n\t\t\t\t\t\t\t');
 
 			function ReservationsViewModel(response) {
+				var _this5 = this;
+
 				var self = this;
 
-				self.names = ko.observableArray([]);
+				this.names = ko.observableArray([]);
+				this.keys = ko.observableArray([]);
+
+				self.keys.push(_this.modelKeys);
 
 				response.forEach(function (record) {
-					self.names.push(record);
+					_this5.names.push(record);
 				});
 
 				self.saveTable = function () {
@@ -195,40 +228,20 @@ $$.Model.Table = (function () {
 							response = $.parseJSON(response);
 
 							if (response.success) {
-								Materialize.toast('Таблица успешно обновлена', 2000); // 4000 is the duration of the toast
+								Materialize.toast('Таблица успешно обновлена', 2000, 'green accent-4');
+							} else {
+								Materialize.toast('Ошибка при сохранении', 2000, 'red accent-4');
 							}
 						}
 					});
 				};
 
 				self.addRecord = function () {
-					console.log('addRecord');
-					/*$.ajax({
-      type: 'POST',
-      url: 'core/TableSave.php',
-      data: {
-      tableName: 'catalog',
-      data: ko.toJSON(self.names)
-      },
-      success: (response) => {
-      console.log(response);
-      }
-      });*/
+					this.names.push(_this.model);
 				};
 
 				self.deleteRecord = function () {
-					console.log('deleteRecord');
-					/*$.ajax({
-      type: 'POST',
-      url: 'core/TableSave.php',
-      data: {
-      tableName: 'catalog',
-      data: ko.toJSON(self.names)
-      },
-      success: (response) => {
-      console.log(response);
-      }
-      });*/
+					self.names.remove(this);
 				};
 			}
 
@@ -239,20 +252,73 @@ $$.Model.Table = (function () {
 		value: function getTable() {
 			"use strict";
 
-			var _this2 = this;
-
-			$.ajax({
+			return $.ajax({
 				type: 'POST',
 				url: 'core/Table.php',
 				data: {
 					tableName: this.options.tableName
 				},
-				success: function success(response) {
-					response = $.parseJSON(response);
-
-					_this2.createTable(response);
-				}
+				success: function success(response) {}
 			});
+		}
+	}, {
+		key: 'tableSettings',
+		value: function tableSettings() {
+			"use strict";
+			var _this = this;
+
+			function ReservationsViewModel(fieldsType) {
+				var self = this;
+
+				this.fields = ko.observableArray([]);
+				this.updateTable = function () {
+
+					var json = $.parseJSON(ko.toJSON(self.fields));
+
+					json.forEach(function (field) {
+
+						_this.model[field.name] = {
+							value: '',
+							fieldType: field.chosenType[0]
+						};
+					});
+
+					return;
+					$.ajax({
+						type: 'POST',
+						url: 'core/TableSave.php',
+						data: {
+							tableName: _this.options.tableName,
+							data: ko.toJSON(self.names)
+						},
+						success: function success(response) {
+							response = $.parseJSON(response);
+
+							if (response.success) {
+								Materialize.toast('Таблица успешно обновлена', 2000, 'green accent-4');
+							} else {
+								Materialize.toast('Ошибка при сохранении', 2000, 'red accent-4');
+							}
+						}
+					});
+				};
+
+				this.addField = function () {
+					this.fields.push({
+						name: '',
+						types: ko.observableArray(fieldsType),
+						chosenType: ko.observableArray(['NULL'])
+					});
+
+					$('select').material_select();
+				};
+
+				this.removeField = function () {
+					self.names.remove(this);
+				};
+			}
+
+			ko.applyBindings(new ReservationsViewModel(this.fieldsType));
 		}
 	}]);
 
@@ -299,7 +365,7 @@ $$.Model.Tables = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '<h1>Tables</h1>';
+			this.template = '\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<h1>Tables</h1>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
 		}
 	}, {
 		key: 'getTables',
@@ -315,7 +381,7 @@ $$.Model.Tables = (function () {
 					response = $.parseJSON(response);
 					console.log(response);
 
-					var list = $('<ul class="collection with-header"></ul>').appendTo(_this.root);
+					var list = $('<ul class="collection with-header"></ul>').appendTo(_this.root.find('.s12'));
 
 					response.forEach(function (table) {
 						list.append('<a href="tables/' + table + '" class="collection-item">' + table + '</a>');
@@ -501,7 +567,7 @@ $$.FieldType.Text = (function () {
 
 			var id = _.uniqueId('textarea_');
 
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <textarea id="' + this.options.uniqueId + '" class="materialize-textarea" data-bind="value: ' + this.options.bindKey + '"></textarea>\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <textarea id="' + this.options.uniqueId + '" class="materialize-textarea" data-bind="value: ' + this.options.bindKey + ', uniqueName: true"></textarea>\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 
 			/*$(`#${id}`).on('change', function () {
     $(this).trigger('autoresize');

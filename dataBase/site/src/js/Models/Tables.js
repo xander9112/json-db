@@ -25,7 +25,14 @@ $$.Model.Tables = class ModelTables {
 
 	_template () {
 		"use strict";
-		this.template = `<h1>Tables</h1>`;
+		this.template = `
+			<div class="container">
+				<div class="row">
+					<div class="col s12">
+						<h1>Tables</h1>
+					</div>
+				</div>
+			</div>`;
 	}
 
 	getTables () {
@@ -38,7 +45,7 @@ $$.Model.Tables = class ModelTables {
 				response = $.parseJSON(response);
 				console.log(response);
 
-				var list = $('<ul class="collection with-header"></ul>').appendTo(this.root);
+				var list = $('<ul class="collection with-header"></ul>').appendTo(this.root.find('.s12'));
 
 				response.forEach(table => {
 					list.append(`<a href="tables/${table}" class="collection-item">${table}</a>`);
