@@ -175,32 +175,40 @@ $$.Model.Table = (function () {
 			var names = '';
 			var _this = this;
 			this.modelKeys = [];
+
 			_.each(response[0], function (object, key) {
 				names += '<th data-' + key + '="' + object.fieldType + '">' + key + '</th>';
-				_this4.modelKeys.push(key);
+				_this4.modelKeys.push({
+					value: key
+				});
 
 				_this4.model[key] = {
 					value: '',
-					fieldType: ''
+					fieldType: object.fieldType
 				};
 			});
 
 			var records = '';
-
 			_.each(response[0], function (object, key) {
 				var id = _.uniqueId(object.fieldType + '_');
+
+				if (_.isUndefined($$.FieldType[object.fieldType])) {
+					console.log(object.fieldType);
+				}
 
 				var html = new $$.FieldType[object.fieldType]({
 					bindKey: key + '.value',
 					uniqueId: id
 				});
 
-				records += '<td>' + html.template + '</td>';
+				//records += `<td>${html.template}</td>`;
+
+				records += '<td>\n\t\t\t\t<div class="input-field col s12">\n\t\t          <input placeholder="' + object.fieldType + '" type="text" data-bind="value: ' + key + '.value">\n\t\t        </div>\n\t\t\t</td>';
 			});
 
-			records += '<td><a class="waves-effect waves-light btn red" data-bind="click: $parent.deleteRecord"><i class="material-icons">delete</i></a></td>';
+			records += '<td><a href="#"><i class="material-icons" data-bind="click: $parent.deleteRecord">delete</i></a></td>';
 
-			this.root.find('table').html('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + names + '\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t<tbody data-bind="foreach: names">\n\t\t \t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t \t' + records + '\n\t\t\t\t\t\t\t\t </tr>\n\t\t\t\t\t\t\t </tbody>\n\t\t\t\t\t\t\t');
+			this.root.find('table').html('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr data-bind="foreach: keys">\n\t\t\t\t\t\t\t\t\t<th data-bind="text: value"></th>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t<tbody data-bind="foreach: names">\n\t\t \t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + records + '\n\t\t\t\t\t\t\t\t </tr>\n\t\t\t\t\t\t\t </tbody>\n\t\t\t\t\t\t\t');
 
 			function ReservationsViewModel(response) {
 				var _this5 = this;
@@ -210,7 +218,9 @@ $$.Model.Table = (function () {
 				this.names = ko.observableArray([]);
 				this.keys = ko.observableArray([]);
 
-				self.keys.push(_this.modelKeys);
+				_this.modelKeys.forEach(function (key) {
+					_this5.keys.push(key);
+				});
 
 				response.forEach(function (record) {
 					_this5.names.push(record);
@@ -276,28 +286,30 @@ $$.Model.Table = (function () {
 					var json = $.parseJSON(ko.toJSON(self.fields));
 
 					json.forEach(function (field) {
-
 						_this.model[field.name] = {
 							value: '',
 							fieldType: field.chosenType[0]
 						};
 					});
 
-					return;
 					$.ajax({
 						type: 'POST',
 						url: 'core/TableSave.php',
 						data: {
 							tableName: _this.options.tableName,
-							data: ko.toJSON(self.names)
+							data: ko.toJSON([_this.model])
 						},
 						success: function success(response) {
 							response = $.parseJSON(response);
 
 							if (response.success) {
-								Materialize.toast('Таблица успешно обновлена', 2000, 'green accent-4');
+								Materialize.toast('Таблица успешно создана', 2000, 'green accent-4');
+
+								setTimeout(function () {
+									location.reload();
+								}, 200);
 							} else {
-								Materialize.toast('Ошибка при сохранении', 2000, 'red accent-4');
+								Materialize.toast('Ошибка при создании', 2000, 'red accent-4');
 							}
 						}
 					});
@@ -386,7 +398,36 @@ $$.Model.Tables = (function () {
 					response.forEach(function (table) {
 						list.append('<a href="tables/' + table + '" class="collection-item">' + table + '</a>');
 					});
+
+					list.append('<li class="collection-item">\n\t\t\t\t\t<div class="input-field col s4">\n\t\t\t\t\t\t<input placeholder="Название таблицы" id="create_table" type="text" class="validate">\n\t\t\t\t\t    <label for="create_table">Название таблицы</label>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="input-field col s1 right">\n\t\t\t\t\t\t<a href="#" class="waves-effect waves-green btn js-create-table"><i class="material-icons">add</i></a>\n\t\t\t\t\t</div>\n\t\t\t\t</li>');
 				}
+			});
+
+			this.root.on('click', '.js-create-table', function (event) {
+				event.preventDefault();
+
+				var tableName = $('#create_table').val();
+
+				if (tableName === '') {
+					return;
+				}
+
+				$.ajax({
+					type: 'POST',
+					url: 'core/TableCreate.php',
+					data: {
+						tableName: tableName
+					},
+					success: function success(response) {
+						response = $.parseJSON(response);
+
+						if (response.success) {
+							Materialize.toast('Таблица успешно создана', 2000, 'green accent-4');
+						} else {
+							Materialize.toast('Ошибка при создании', 2000, 'red accent-4');
+						}
+					}
+				});
 			});
 		}
 	}]);

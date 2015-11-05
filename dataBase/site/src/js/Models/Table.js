@@ -92,41 +92,53 @@ $$.Model.Table = class ModelTable {
 		var names = '';
 		var _this = this;
 		this.modelKeys = [];
+
 		_.each(response[0], (object, key) => {
 			names += `<th data-${key}="${object.fieldType}">${key}</th>`;
-			this.modelKeys.push(key);
+			this.modelKeys.push({
+				value: key
+			});
 
 			this.model[key] = {
-				value:     '',
-				fieldType: ''
+				value: '',
+				fieldType: object.fieldType
 			};
 
 		});
 
 		var records = ``;
-
 		_.each(response[0], (object, key) => {
 			var id = _.uniqueId(`${object.fieldType}_`);
 
+			if (_.isUndefined($$.FieldType[object.fieldType])) {
+				console.log(object.fieldType);
+			}
+
 			var html = new $$.FieldType[object.fieldType]({
-				bindKey:  `${key}.value`,
+				bindKey: `${key}.value`,
 				uniqueId: id
 			});
 
-			records += `<td>${html.template}</td>`;
+			//records += `<td>${html.template}</td>`;
+
+			records += `<td>
+				<div class="input-field col s12">
+		          <input placeholder="${object.fieldType}" type="text" data-bind="value: ${key}.value">
+		        </div>
+			</td>`;
 		});
 
-		records += `<td><a class="waves-effect waves-light btn red" data-bind="click: $parent.deleteRecord"><i class="material-icons">delete</i></a></td>`;
+		records += `<td><a href="#"><i class="material-icons" data-bind="click: $parent.deleteRecord">delete</i></a></td>`;
 
 		this.root.find('table').html(`
 							<thead>
-								<tr>
-									${names}
+								<tr data-bind="foreach: keys">
+									<th data-bind="text: value"></th>
 								</tr>
 							</thead>
 							<tbody data-bind="foreach: names">
 		 						<tr>
-								 	${records}
+									${records}
 								 </tr>
 							 </tbody>
 							`);
@@ -137,7 +149,9 @@ $$.Model.Table = class ModelTable {
 			this.names = ko.observableArray([]);
 			this.keys = ko.observableArray([]);
 
-			self.keys.push(_this.modelKeys);
+			_this.modelKeys.forEach(key => {
+				this.keys.push(key);
+			});
 
 			response.forEach(record => {
 				this.names.push(record);
@@ -145,11 +159,11 @@ $$.Model.Table = class ModelTable {
 
 			self.saveTable = function () {
 				$.ajax({
-					type:    'POST',
-					url:     'core/TableSave.php',
-					data:    {
+					type: 'POST',
+					url: 'core/TableSave.php',
+					data: {
 						tableName: _this.options.tableName,
-						data:      ko.toJSON(self.names)
+						data: ko.toJSON(self.names)
 					},
 					success: (response) => {
 						response = $.parseJSON(response);
@@ -179,9 +193,9 @@ $$.Model.Table = class ModelTable {
 		"use strict";
 
 		return $.ajax({
-			type:    'POST',
-			url:     'core/Table.php',
-			data:    {
+			type: 'POST',
+			url: 'core/Table.php',
+			data: {
 				tableName: this.options.tableName
 			},
 			success: (response) => {
@@ -203,29 +217,30 @@ $$.Model.Table = class ModelTable {
 				var json = $.parseJSON(ko.toJSON(self.fields));
 
 				json.forEach(field => {
-
 					_this.model[field.name] = {
-						value:     '',
+						value: '',
 						fieldType: field.chosenType[0]
 					};
-
 				});
 
-				return;
 				$.ajax({
-					type:    'POST',
-					url:     'core/TableSave.php',
-					data:    {
+					type: 'POST',
+					url: 'core/TableSave.php',
+					data: {
 						tableName: _this.options.tableName,
-						data:      ko.toJSON(self.names)
+						data: ko.toJSON([_this.model])
 					},
 					success: (response) => {
 						response = $.parseJSON(response);
 
 						if (response.success) {
-							Materialize.toast('Таблица успешно обновлена', 2000, 'green accent-4');
+							Materialize.toast('Таблица успешно создана', 2000, 'green accent-4');
+
+							setTimeout(() => {
+								location.reload()
+							}, 200);
 						} else {
-							Materialize.toast('Ошибка при сохранении', 2000, 'red accent-4');
+							Materialize.toast('Ошибка при создании', 2000, 'red accent-4');
 						}
 					}
 				});
@@ -233,8 +248,8 @@ $$.Model.Table = class ModelTable {
 
 			this.addField = function () {
 				this.fields.push({
-					name:       '',
-					types:      ko.observableArray(fieldsType),
+					name: '',
+					types: ko.observableArray(fieldsType),
 					chosenType: ko.observableArray(['NULL'])
 				});
 
