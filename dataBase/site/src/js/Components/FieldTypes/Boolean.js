@@ -15,10 +15,10 @@ $$.FieldType.Boolean = class FieldTypeBoolean {
 		"use strict";
 
 		this.template = `
-			<div class="switch">
+			<div class="input-field col ${this.options.column} switch">
 			    <label for="${this.options.uniqueId}">
 			      Off
-			      <input type="checkbox" id="${this.options.uniqueId}" data-bind="checked: ${this.options.bindKey}">
+			      <input type="checkbox" id="${this.options.uniqueId}" data-bind="checked: ${this.options.bindKey}.value">
 			      <span class="lever"></span>
 			      On
 			    </label>

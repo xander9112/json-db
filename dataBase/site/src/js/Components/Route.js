@@ -18,7 +18,7 @@ $$.Component.Route = class Route {
 
 		page('/', (options) => {
 			"use strict";
-			options.pathname = '/index';
+			options.path = '/index';
 			this._initModel(options);
 		});
 
@@ -54,6 +54,8 @@ $$.Component.Route = class Route {
 		if (_.size(options.params)) {
 			modelName = modelName.slice(0, -1);
 		}
+
+
 
 		if (this.currentModel) {
 			this.currentModel.destroy();

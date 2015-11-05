@@ -19,7 +19,7 @@ $$.FieldType.Text = class FieldTypeText {
 
 		this.template = `
 			<div class="input-field col ${this.options.column}">
-	          <textarea id="${this.options.uniqueId}" class="materialize-textarea" data-bind="value: ${this.options.bindKey}, uniqueName: true"></textarea>
+	          <textarea id="${this.options.uniqueId}" class="materialize-textarea" data-bind="value: ${this.options.bindKey}.value, uniqueName: true"></textarea>
 	          <label class="active" for="${this.options.uniqueId}">${this.options.label}</label>
 	        </div>
 		`;

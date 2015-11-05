@@ -11,8 +11,101 @@ $$.Model.Index = class ModelIndex {
 	}
 
 	initialize () {
+
 		"use strict";
 		this.root.html(this.template);
+
+		function TestViewModel () {
+			var self = this;
+
+			this.names = ko.observableArray([
+				{
+					about: {
+						value: "Товар 2",
+						fieldType: "Text"
+					},
+					active: {
+						value: false,
+						fieldType: "Boolean"
+					},
+					id: {
+						value: "1", fieldType: "Integer"
+					},
+					imageUrl: {
+						value: "/data/images/card2.jpg",
+						fieldType: "Media"
+					},
+					title: {
+						value: "Крутой товар 2",
+						fieldType: "String"
+					}
+				},
+				{
+					about: {
+						value: "Товар 2",
+						fieldType: "Text"
+					},
+					active: {
+						value: true,
+						fieldType: "Boolean"
+					},
+					id: {
+						value: "1", fieldType: "Integer"
+					},
+					imageUrl: {
+						value: "/data/images/card2.jpg",
+						fieldType: "Media"
+					},
+					title: {
+						value: "Крутой товар 2",
+						fieldType: "String"
+					}
+				},
+				{
+					about: {
+						value: "Товар 2",
+						fieldType: "Text"
+					},
+					active: {
+						value: false,
+						fieldType: "Boolean"
+					},
+					id: {
+						value: "1", fieldType: "Integer"
+					},
+					imageUrl: {
+						value: "/data/images/card2.jpg",
+						fieldType: "Media"
+					},
+					title: {
+						value: "Крутой товар 2",
+						fieldType: "String"
+					}
+				},
+			]);
+
+			this.test = function () {
+				console.log(this.names());
+			}
+		}
+
+
+		ko.bindingHandlers.myBind = {
+			init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+				_.each(valueAccessor(), (object, key) => {
+					var field = new $$.FieldType[object.fieldType]({
+						bindKey: key,
+						column: 's2'
+					});
+
+					$(element).append(field.template);
+				});
+			},
+			update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+			}
+		};
+
+		ko.applyBindings(new TestViewModel());
 	}
 
 	destroy () {
@@ -22,6 +115,11 @@ $$.Model.Index = class ModelIndex {
 
 	_template () {
 		"use strict";
-		this.template = `<h1>Index</h1>`;
+		this.template = `<h1>Index</h1>
+		<div data-bind="foreach: names">
+			<div class="row" data-bind="myBind: $data"></div>
+		</div>
+		<button data-bind="click: test">test</button>
+		`;
 	}
 }

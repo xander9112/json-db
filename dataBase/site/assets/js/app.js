@@ -30,8 +30,95 @@ $$.Model.Index = (function () {
 	_createClass(ModelIndex, [{
 		key: 'initialize',
 		value: function initialize() {
+
 			"use strict";
 			this.root.html(this.template);
+
+			function TestViewModel() {
+				var self = this;
+
+				this.names = ko.observableArray([{
+					about: {
+						value: "Товар 2",
+						fieldType: "Text"
+					},
+					active: {
+						value: false,
+						fieldType: "Boolean"
+					},
+					id: {
+						value: "1", fieldType: "Integer"
+					},
+					imageUrl: {
+						value: "/data/images/card2.jpg",
+						fieldType: "Media"
+					},
+					title: {
+						value: "Крутой товар 2",
+						fieldType: "String"
+					}
+				}, {
+					about: {
+						value: "Товар 2",
+						fieldType: "Text"
+					},
+					active: {
+						value: true,
+						fieldType: "Boolean"
+					},
+					id: {
+						value: "1", fieldType: "Integer"
+					},
+					imageUrl: {
+						value: "/data/images/card2.jpg",
+						fieldType: "Media"
+					},
+					title: {
+						value: "Крутой товар 2",
+						fieldType: "String"
+					}
+				}, {
+					about: {
+						value: "Товар 2",
+						fieldType: "Text"
+					},
+					active: {
+						value: false,
+						fieldType: "Boolean"
+					},
+					id: {
+						value: "1", fieldType: "Integer"
+					},
+					imageUrl: {
+						value: "/data/images/card2.jpg",
+						fieldType: "Media"
+					},
+					title: {
+						value: "Крутой товар 2",
+						fieldType: "String"
+					}
+				}]);
+
+				this.test = function () {
+					console.log(this.names());
+				};
+			}
+
+			ko.bindingHandlers.myBind = {
+				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+					_.each(valueAccessor(), function (object, key) {
+						var field = new $$.FieldType[object.fieldType]({
+							bindKey: key,
+							column: 's2'
+						});
+
+						$(element).append(field.template);
+					});
+				},
+				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
+			};
+
+			ko.applyBindings(new TestViewModel());
 		}
 	}, {
 		key: 'destroy',
@@ -43,7 +130,7 @@ $$.Model.Index = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '<h1>Index</h1>';
+			this.template = '<h1>Index</h1>\n\t\t<div data-bind="foreach: names">\n\t\t\t<div class="row" data-bind="myBind: $data"></div>\n\t\t</div>\n\t\t<button data-bind="click: test">test</button>\n\t\t';
 		}
 	}]);
 
@@ -121,6 +208,18 @@ $$.Model.Table = (function () {
 			_this2.fieldsType.push(key);
 		});
 
+		faker.locale = "ru";
+
+		this.fakerObject = {
+			Boolean: faker.random.boolean,
+			Integer: faker.random.number,
+			String: faker.name.title,
+			Text: faker.lorem.sentences, //(number) - количество предложений
+			Media: faker.random.number //({min: 150,max: 200})
+		};
+
+		/*console.log(faker.fake('{{lorem}}, {{name.firstName}}'));*/
+
 		this._template();
 		this.initialize();
 	}
@@ -161,7 +260,7 @@ $$.Model.Table = (function () {
 			"use strict";
 			this.settings = '\n\t\t<div id="modal_1" class="modal">\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: updateTable">\n\t\t\t\t<div class="modal-content">\n\t\t\t\t  <h4>Настройка таблицы</h4>\n\t\t\t\t\t<div class="row" data-bind="foreach: fields">\n\t\t\t\t\t\t<div class="input-field col s6">\n\t\t\t\t\t\t  <input placeholder="Название поля" id="field_name_$index" data-bind="value: name" type="text" class="validate">\n\t\t\t\t\t\t  <label for="field_name_$index">Название поля</label>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="input-field col s6">\n\t\t\t\t\t\t\t<select data-bind="options: types, selectedOptions: chosenType"></select>\n\t\t\t\t\t\t\t<label>Тип поля</label>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t<button type="submit" class="waves-effect waves-green btn-flat">Сохранить</button>\n\t\t\t\t\t<a class="waves-effect waves-green btn-flat" data-bind="click: addField">Добавить поле</a>\n\t\t\t\t</div>\n\t\t\t</form>\n\t \t</div>';
 
-			this.form = '\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable">\n\t\t\t\t<table></table>\n\t\t        <button type="submit" class="waves-effect waves-light btn">Сохранить</button>\n\t\t\t\t<button class="waves-effect waves-light btn right" data-bind="click: addRecord">Добавить</button>\n\t\t\t</form>';
+			this.form = '\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable">\n\t\t\t\t<table></table>\n\t\t\t\t<div class="fixed-action-btn" style="bottom: 45px; right: 24px;">\n\t\t\t\t    <a class="btn-floating btn-large red">\n\t\t\t\t      <i class="large material-icons">menu</i>\n\t\t\t\t    </a>\n\t\t\t\t    <ul>\n\t\t\t\t      <li>\n\t\t\t\t      <button type="submit" class="btn-floating red"><i class="material-icons">insert_chart</i></button>\n\t\t\t\t      </li>\n\t\t\t\t      <li><a class="btn-floating yellow darken-1" data-bind="click: addRandomRecord"><i class="material-icons">add</i></a></li>\n\t\t\t\t      <li><a class="btn-floating green" data-bind="click: addRecord"><i class="material-icons">add</i></a></li>\n\t\t\t\t    </ul>\n\t\t\t\t  </div>\n\t\t\t</form>';
 
 			this.template = '\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<h1>' + this.options.tableName + '</h1>\n\t\t\t\t\t\t' + this.form + '\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
 		}
@@ -222,6 +321,12 @@ $$.Model.Table = (function () {
 					_this5.keys.push(key);
 				});
 
+				var model = {};
+
+				_.each(_this.model, function (object, key) {
+					model[key] = object;
+				});
+
 				response.forEach(function (record) {
 					_this5.names.push(record);
 				});
@@ -244,6 +349,30 @@ $$.Model.Table = (function () {
 							}
 						}
 					});
+				};
+
+				self.addRandomRecord = function () {
+					_.each(model, function (object, key) {
+						if (object.fieldType === 'Text') {
+							object.value = _this.fakerObject[object.fieldType](5);
+						} else if (object.fieldType === 'Media') {
+							object.value = '' + _this.fakerObject[object.fieldType]({
+								min: 150,
+								max: 200
+							});
+
+							object.value += 'x';
+
+							object.value += '' + _this.fakerObject[object.fieldType]({
+								min: 150,
+								max: 200
+							});
+						} else {
+							object.value = _this.fakerObject[object.fieldType]();
+						}
+					});
+
+					this.names.push(model);
 				};
 
 				self.addRecord = function () {
@@ -462,7 +591,7 @@ $$.FieldType.Boolean = (function () {
 		value: function _template() {
 			"use strict";
 
-			this.template = '\n\t\t\t<div class="switch">\n\t\t\t    <label for="' + this.options.uniqueId + '">\n\t\t\t      Off\n\t\t\t      <input type="checkbox" id="' + this.options.uniqueId + '" data-bind="checked: ' + this.options.bindKey + '">\n\t\t\t      <span class="lever"></span>\n\t\t\t      On\n\t\t\t    </label>\n\t\t    </div>';
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + ' switch">\n\t\t\t    <label for="' + this.options.uniqueId + '">\n\t\t\t      Off\n\t\t\t      <input type="checkbox" id="' + this.options.uniqueId + '" data-bind="checked: ' + this.options.bindKey + '.value">\n\t\t\t      <span class="lever"></span>\n\t\t\t      On\n\t\t\t    </label>\n\t\t    </div>';
 		}
 	}]);
 
@@ -497,7 +626,7 @@ $$.FieldType.Integer = (function () {
 		value: function _template() {
 			"use strict";
 
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 		}
 	}]);
 
@@ -534,7 +663,7 @@ $$.FieldType.Media = (function () {
 
 			var id = _.uniqueId('input_');
 
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 		}
 	}]);
 
@@ -571,7 +700,7 @@ $$.FieldType.String = (function () {
 
 			var id = _.uniqueId('input_');
 
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 		}
 	}]);
 
@@ -608,7 +737,7 @@ $$.FieldType.Text = (function () {
 
 			var id = _.uniqueId('textarea_');
 
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <textarea id="' + this.options.uniqueId + '" class="materialize-textarea" data-bind="value: ' + this.options.bindKey + ', uniqueName: true"></textarea>\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <textarea id="' + this.options.uniqueId + '" class="materialize-textarea" data-bind="value: ' + this.options.bindKey + '.value, uniqueName: true"></textarea>\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 
 			/*$(`#${id}`).on('change', function () {
     $(this).trigger('autoresize');
@@ -751,7 +880,7 @@ $$.Component.Route = (function () {
 
 			page('/', function (options) {
 				"use strict";
-				options.pathname = '/index';
+				options.path = '/index';
 				_this._initModel(options);
 			});
 

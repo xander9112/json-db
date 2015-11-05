@@ -13,6 +13,19 @@ $$.Model.Table = class ModelTable {
 			this.fieldsType.push(key)
 		});
 
+		faker.locale = "ru";
+
+		this.fakerObject = {
+			Boolean: faker.random.boolean,
+			Integer: faker.random.number,
+			String: faker.name.title,
+			Text: faker.lorem.sentences, //(number) - количество предложений
+			Media: faker.random.number //({min: 150,max: 200})
+		};
+
+		/*console.log(faker.fake('{{lorem}}, {{name.firstName}}'));*/
+
+
 		this._template();
 		this.initialize();
 	}
@@ -72,8 +85,18 @@ $$.Model.Table = class ModelTable {
 		this.form = `
 			<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable">
 				<table></table>
-		        <button type="submit" class="waves-effect waves-light btn">Сохранить</button>
-				<button class="waves-effect waves-light btn right" data-bind="click: addRecord">Добавить</button>
+				<div class="fixed-action-btn" style="bottom: 45px; right: 24px;">
+				    <a class="btn-floating btn-large red">
+				      <i class="large material-icons">menu</i>
+				    </a>
+				    <ul>
+				      <li>
+				      <button type="submit" class="btn-floating red"><i class="material-icons">insert_chart</i></button>
+				      </li>
+				      <li><a class="btn-floating yellow darken-1" data-bind="click: addRandomRecord"><i class="material-icons">add</i></a></li>
+				      <li><a class="btn-floating green" data-bind="click: addRecord"><i class="material-icons">add</i></a></li>
+				    </ul>
+				  </div>
 			</form>`;
 
 		this.template = `
@@ -153,6 +176,12 @@ $$.Model.Table = class ModelTable {
 				this.keys.push(key);
 			});
 
+			var model = {};
+
+			_.each(_this.model, (object, key) => {
+				model[key] = object;
+			});
+
 			response.forEach(record => {
 				this.names.push(record);
 			});
@@ -175,6 +204,30 @@ $$.Model.Table = class ModelTable {
 						}
 					}
 				});
+			};
+
+			self.addRandomRecord = function () {
+				_.each(model, (object, key) => {
+					if (object.fieldType === 'Text') {
+						object.value = _this.fakerObject[object.fieldType](5)
+					} else if (object.fieldType === 'Media') {
+						object.value = `${_this.fakerObject[object.fieldType]({
+							min: 150,
+							max: 200
+						})}`;
+
+						object.value += 'x';
+
+						object.value += `${_this.fakerObject[object.fieldType]({
+							min: 150,
+							max: 200
+						})}`;
+					} else {
+						object.value = _this.fakerObject[object.fieldType]();
+					}
+				});
+
+				this.names.push(model);
 			};
 
 			self.addRecord = function () {
