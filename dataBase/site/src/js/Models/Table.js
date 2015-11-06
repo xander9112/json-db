@@ -20,11 +20,8 @@ $$.Model.Table = class ModelTable {
 			Integer: faker.random.number,
 			String: faker.name.title,
 			Text: faker.lorem.sentences, //(number) - количество предложений
-			Media: faker.random.number //({min: 150,max: 200})
+			Media: faker.image.technics  //({min: 150,max: 200})
 		};
-
-		/*console.log(faker.fake('{{lorem}}, {{name.firstName}}'));*/
-
 
 		this._template();
 		this.initialize();
@@ -159,17 +156,34 @@ $$.Model.Table = class ModelTable {
 									<th data-bind="text: value"></th>
 								</tr>
 							</thead>
-							<tbody data-bind="foreach: names">
-		 						<tr>
-									${records}
-								 </tr>
+							<tbody data-bind="foreach: fields">
+		 						<tr data-bind="tableTypes: $data"></tr>
 							 </tbody>
 							`);
+
+
+		ko.bindingHandlers.tableTypes = {
+			init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+				_.each(valueAccessor(), (object, key) => {
+					var field = new $$.FieldType[object.fieldType]({
+						bindKey: key,
+						column: 's12'
+					});
+
+					$(element).append(`<td>${field.template}</td>`);
+				});
+
+
+				$(element).append(`<td><a href="#"><i class="material-icons" data-bind="click: $parent.deleteRecord">delete</i></a></td>`)
+			},
+			update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+			}
+		};
 
 		function ReservationsViewModel (response) {
 			var self = this;
 
-			this.names = ko.observableArray([]);
+			this.fields = ko.observableArray([]);
 			this.keys = ko.observableArray([]);
 
 			_this.modelKeys.forEach(key => {
@@ -178,12 +192,8 @@ $$.Model.Table = class ModelTable {
 
 			var model = {};
 
-			_.each(_this.model, (object, key) => {
-				model[key] = object;
-			});
-
 			response.forEach(record => {
-				this.names.push(record);
+				this.fields.push(record);
 			});
 
 			self.saveTable = function () {
@@ -192,7 +202,7 @@ $$.Model.Table = class ModelTable {
 					url: 'core/TableSave.php',
 					data: {
 						tableName: _this.options.tableName,
-						data: ko.toJSON(self.names)
+						data: ko.toJSON(self.fields)
 					},
 					success: (response) => {
 						response = $.parseJSON(response);
@@ -207,35 +217,40 @@ $$.Model.Table = class ModelTable {
 			};
 
 			self.addRandomRecord = function () {
-				_.each(model, (object, key) => {
+				_.each(_this.model, (object, key) => {
 					if (object.fieldType === 'Text') {
 						object.value = _this.fakerObject[object.fieldType](5)
 					} else if (object.fieldType === 'Media') {
-						object.value = `${_this.fakerObject[object.fieldType]({
-							min: 150,
-							max: 200
-						})}`;
+						object.value = `${_this.fakerObject[object.fieldType]()}`;
+							/*object.value = `${_this.fakerObject[object.fieldType]({
+							 min: 150,
+							 max: 200
+							 })}`;
 
-						object.value += 'x';
+							 object.value += 'x';
 
-						object.value += `${_this.fakerObject[object.fieldType]({
-							min: 150,
-							max: 200
-						})}`;
-					} else {
+							 object.value += `${_this.fakerObject[object.fieldType]({
+							 min: 150,
+							 max: 200
+							 })}`;*/
+							} else {
 						object.value = _this.fakerObject[object.fieldType]();
 					}
 				});
 
-				this.names.push(model);
+				this.fields.push(_this.model);
 			};
 
 			self.addRecord = function () {
-				this.names.push(_this.model);
+				_.each(_this.model, (object, key) => {
+					object.value = "";
+				});
+
+				this.fields.push(_this.model);
 			};
 
 			self.deleteRecord = function () {
-				self.names.remove(this);
+				self.fields.remove(this);
 			};
 		}
 

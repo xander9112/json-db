@@ -1,3 +1,567 @@
+/**
+ * Base emitter class.
+ *
+ * Dependencies: underscore.js.
+ *
+ * Example:
+ *
+ *   var e = new $$.Emitter();
+ *
+ *   e.on('event1', function() {});
+ *   e.on('event2.namespace1', function() {});
+ *   e.on('event2.namespace2', function() {});
+ *   e.on('event3a.namespace3', function() {});
+ *   e.on('event3b.namespace3', function() {});
+ *   e.on('event3c.namespace3', function() {});
+ *   e.emit('event1', { Some event data here... });
+ *   e.emit('event2.namespace1');
+ *   e.off('event1');
+ *   e.off('event2.namespace1');
+ *   e.off('event2.namespace2');
+ *   e.off('.namespace3');
+ *
+ * Multiple event data arguments are supported.
+ *
+ *   e.on('event10', function(a, b, c) { ... });
+ *   e.emit('event10', 2, 'qwe', { x: 3, y: 'zxc' });
+ *
+ * Also #trigger() is an alias for #emit().
+ *
+ * NOTE: The namespace name "*" has a special meaning in $$.Emitter.ItemContainer.
+ */
+
+'use strict';
+
+var $$ = $$ || {};
+
+/**
+ * @constructor
+ */
+$$.Emitter = function () {
+	this._itemContainer = new $$.Emitter.ItemContainer();
+};
+
+$$.Emitter.prototype = {
+	/**
+  * @param {String} eventId
+  * @return {Boolean}
+  * @private
+  */
+	_isEventIdJustANamespace: function _isEventIdJustANamespace(eventId) {
+		eventId = String(eventId);
+
+		return !!eventId.match(/^\.[a-z\d]+$/i);
+	},
+
+	/**
+  * @param {String} eventId
+  * @return {Array} [eventName, namespace]
+  * @throws {Error}
+  * @private
+  */
+	_parseAndValidateEventId: function _parseAndValidateEventId(eventId) {
+		eventId = String(eventId);
+
+		// Either a single event name.
+
+		var match = eventId.match(/^[a-z\d]+$/i);
+
+		if (match) {
+			return [match[0], null];
+		}
+
+		// Or an event name + a namespace name.
+
+		match = eventId.match(/^([a-z\d]+)\.([a-z\d]+)$/i);
+
+		if (!match) {
+			throw Error('Full event names should not be empty, should consist of letters and numbers' + ' and may contain only single dot in the middle.');
+		}
+
+		return [match[1], match[2]];
+	},
+
+	/**
+  * @param {String} eventId
+  */
+	emit: function emit(eventId /*, eventData1, eventData2, ... */) {
+		eventId = String(eventId);
+
+		var parts = this._parseAndValidateEventId(eventId);
+		var items = this._itemContainer.getItems(parts[0], parts[1]);
+		var args = Array.prototype.slice.call(arguments, 1);
+
+		_.each(items, function (item) {
+			item.callback.apply(null, args);
+		});
+	},
+
+	/**
+  * @param {String} eventId
+  * @param {Function} callback
+  */
+	on: function on(eventId, callback) {
+		if (callback == null) {
+			throw Error('An event callback should be provided.');
+		}
+
+		if (!_.isFunction(callback)) {
+			throw Error('An event callback should be a function.');
+		}
+
+		var parts = this._parseAndValidateEventId(eventId);
+
+		this._itemContainer.add(parts[0], parts[1], callback);
+	},
+
+	off: function off(eventId) {
+		eventId = String(eventId);
+
+		if (this._isEventNameWithNamespaceJustANamespace(eventId)) {
+			// Just a namespace.
+			this._itemContainer.remove(null, eventId.substr(1));
+		} else {
+			// Event name and possible namespace.
+			var parts = this._parseAndValidateEventId(eventId);
+			this._itemContainer.remove(parts[0], parts[1]);
+		}
+	}
+};
+
+$$.Emitter.prototype.trigger = $$.Emitter.prototype.emit;
+
+$$.Emitter.ItemContainer = function () {
+	/* Items:
+  *
+  * {
+  *   eventName1: {
+  *     namespace1: [ { callback, *... }, ... ],
+  *     namespace2: [ ... ]
+  *     ...
+  *   },
+  *
+  *   eventName2: { ... }
+  *   ...
+  * }
+  */
+	this._items = {};
+};
+
+$$.Emitter.ItemContainer.prototype = {
+	/**
+  * @param {String} eventName
+  * @param {String}|null namespace
+  * @param {Function} callback
+  */
+	add: function add(eventName, namespace, callback) {
+		eventName = String(eventName);
+		namespace = namespace == null ? '*' : String(namespace);
+
+		if (!this._items.hasOwnProperty(eventName)) {
+			this._items[eventName] = {};
+		}
+
+		if (!this._items[eventName].hasOwnProperty(namespace)) {
+			this._items[eventName][namespace] = [];
+		}
+
+		this._items[eventName][namespace].push({
+			callback: callback
+		});
+	},
+
+	/**
+  * @param {String} eventName
+  * @param {String}|null namespace
+  * @return {Array}
+  */
+	getItems: function getItems(eventName, namespace) {
+		eventName = String(eventName);
+
+		if (!this._items.hasOwnProperty(eventName)) {
+			return [];
+		}
+
+		if (namespace == null) {
+			// Return items for all namespaces of the event.
+
+			var arraysOfItems = _.values(this._items[eventName]);
+
+			return _.union.apply(null, arraysOfItems);
+		}
+
+		namespace = String(namespace);
+
+		if (!this._items[eventName].hasOwnProperty(namespace)) {
+			return [];
+		}
+
+		return this._items[eventName][namespace];
+	},
+
+	/**
+  * Removes by event name, by namespace or by both.
+  *
+  * @param {String}|null eventName
+  * @param {String}|null namespace
+  */
+	remove: function remove(eventName, namespace) {
+		if (eventName == null && namespace == null) {
+			throw Error('Only one of the arguments can be omitted.');
+		}
+
+		if (namespace == null) {
+			this.removeByEventName(eventName);
+		} else if (eventName == null) {
+			this.removeByNamespace(namespace);
+		} else {
+			// Both eventName and namespace are not null.
+
+			eventName = String(eventName);
+			namespace = String(namespace);
+
+			if (!this._items.hasOwnProperty(eventName) || !this._items[eventName].hasOwnProperty(namespace)) {
+				return;
+			}
+
+			delete this._items[eventName][namespace];
+		}
+	},
+
+	/**
+  * @param {String} eventName
+  */
+	removeByEventName: function removeByEventName(eventName) {
+		eventName = String(eventName);
+
+		if (!this._items.hasOwnProperty(eventName)) {
+			return;
+		}
+
+		delete this._items[eventName];
+	},
+
+	/**
+  * @param {String} namespace
+  */
+	removeByNamespace: function removeByNamespace(namespace) {
+		namespace = String(namespace);
+
+		_.each(this._items, function (itemsByNamespace) {
+			if (!itemsByNamespace.hasOwnProperty(namespace)) {
+				return;
+			}
+
+			delete itemsByNamespace[namespace];
+		});
+	}
+};;
+"use strict";
+
+var $$ = $$ || {};
+
+$$.Simulation = $$.Simulation || {};
+
+/**
+ * Не нужно использовать этот класс напрямую. Нужно использовать $$.Simulation.Spring.
+ */
+$$.Simulation.SpringSimulator = function () {
+	var self = this;
+
+	this._springs = [];
+	this._lastTime = +new Date();
+
+	setInterval(function () {
+		var now = +new Date();
+		var time = (now - self._lastTime) / 1000;
+		var dt = 0.01;
+
+		if (time > 0.2) {
+			// Если жс работает слишком медленно, замедлить симуляцию.
+			time = 0.2;
+		}
+
+		var i,
+		    ni = self._springs.length,
+		    spring,
+		    dampings = [],
+		    distance,
+		    newDistance,
+		    force,
+		    newVelocity,
+		    targetVelocityLimit,
+		    velocityLimit,
+		    positionLimits;
+
+		for (i = 0; i < ni; i++) {
+			spring = self._springs[i];
+			dampings.push(2 * Math.sqrt(spring._rigidness) * spring._damping);
+		}
+
+		while (time > 0.000001) {
+			for (i = 0; i < ni; i++) {
+				spring = self._springs[i];
+
+				if (spring._frozen) {
+					continue;
+				}
+
+				distance = spring._target - spring._position;
+
+				force = (distance >= 0 ? 1 : -1) * Math.pow(Math.abs(distance), spring._forcePower) * spring._rigidness - (spring._velocity >= 0 ? 1 : -1) * Math.abs(spring._velocity) * dampings[i];
+
+				newVelocity = spring._velocity + force * dt;
+
+				velocityLimit = spring._velocityLimit;
+				targetVelocityLimit = spring._targetVelocityLimit;
+
+				if (targetVelocityLimit !== null) {
+					targetVelocityLimit *= Math.pow(spring._targetVelocityLimitPower, Math.abs(distance));
+
+					if (velocityLimit === null || targetVelocityLimit < velocityLimit) {
+						velocityLimit = targetVelocityLimit;
+					}
+				}
+
+				if (velocityLimit !== null && Math.abs(newVelocity) > velocityLimit) {
+					newVelocity = (newVelocity >= 0 ? 1 : -1) * velocityLimit;
+				}
+
+				spring._position += newVelocity * dt;
+				spring._velocity = newVelocity;
+
+				if (spring._stopAtTarget) {
+					newDistance = spring._target - spring._position;
+
+					if (distance > 0 && newDistance <= 0 || distance < 0 && newDistance >= 0) {
+						spring._position = spring._target;
+						spring._velocity = 0;
+						continue;
+					}
+				}
+
+				if (spring._positionLimits !== null) {
+					positionLimits = spring._positionLimits;
+
+					if (spring._position < positionLimits[0]) {
+						spring._position = positionLimits[0];
+						spring._velocity = 0;
+					} else if (spring._position > positionLimits[1]) {
+						spring._position = positionLimits[1];
+						spring._velocity = 0;
+					}
+				}
+			}
+
+			time -= dt;
+		}
+
+		self._lastTime = now;
+
+		for (i = 0; i < ni; i++) {
+			spring = self._springs[i];
+
+			if (spring == null) {
+				continue;
+			}
+
+			if (!spring._frozen && spring._step) {
+				spring._step.call();
+			}
+		}
+	}, 20);
+};
+
+$$.Simulation.SpringSimulator.prototype = {
+	addSpring: function addSpring(spring) {
+		this._springs.push(spring);
+	},
+
+	deleteSpring: function deleteSpring(spring) {
+		var i = _.indexOf(this._springs, spring);
+
+		if (i != -1) {
+			this._springs.splice(i, 1);
+		}
+	}
+};
+
+// Создать один "глобальный" экземпляр.
+
+$$.Simulation.__springSimulator = new $$.Simulation.SpringSimulator();;
+'use strict';
+
+var $$ = $$ || {};
+
+$$.Simulation = $$.Simulation || {};
+
+/**
+ * @constructor
+ */
+$$.Simulation.Spring = function (options) {
+	options = _.extend({
+		frozen: false,
+		position: 0,
+		positionLimits: null,
+		target: 0,
+		targetLimits: null,
+		velocity: 0,
+		velocityLimit: null,
+		rigidness: 1,
+		damping: 1,
+		forcePower: 1,
+		targetVelocityLimit: null,
+		targetVelocityLimitPower: 1.25,
+		stopAtTarget: false,
+		step: null
+	}, options || {});
+
+	this._frozen = options.frozen;
+	this._position = options.position;
+	this._positionLimits = options.positionLimits;
+	this._target = options.target;
+	this._targetLimits = options.targetLimits;
+	this._velocity = options.velocity;
+	this._velocityLimit = options.velocityLimit;
+	this._rigidness = options.rigidness;
+	this._damping = options.damping;
+	this._forcePower = options.forcePower;
+	this._targetVelocityLimit = options.targetVelocityLimit;
+	this._targetVelocityLimitPower = options.targetVelocityLimitPower;
+	this._stopAtTarget = options.stopAtTarget;
+	this._step = null;
+
+	if (options.step) {
+		this.step(options.step);
+	}
+
+	this._applyTargetLimits();
+
+	$$.Simulation.__springSimulator.addSpring(this);
+};
+
+$$.Simulation.Spring.prototype = {
+	_applyTargetLimits: function _applyTargetLimits() {
+		if (this._targetLimits === null) {
+			return;
+		}
+
+		if (this._target < this._targetLimits[0]) {
+			this._target = this._targetLimits[0];
+		} else if (this._target > this._targetLimits[1]) {
+			this._target = this._targetLimits[1];
+		}
+	},
+
+	destroy: function destroy() {
+		this._step = null;
+		$$.Simulation.__springSimulator.deleteSpring(this);
+	},
+
+	moveTarget: function moveTarget(delta) {
+		this._target += delta;
+		this._applyTargetLimits();
+	},
+
+	step: function step(callback) {
+		this._step = _.bind(callback, this);
+	},
+
+	target: function target(value) {
+		if (arguments.length == 0) {
+			return this._target;
+		}
+
+		this._target = value;
+		this._applyTargetLimits();
+	},
+
+	targetLimits: function targetLimits(value) {
+		if (arguments.length == 0) {
+			return this._targetLimits;
+		}
+
+		this._targetLimits = value;
+		this._applyTargetLimits();
+	}
+};
+
+// Создать методы-аксессоры.
+
+_.each(['frozen', 'position', 'positionLimits', 'velocity', 'velocityLimit', 'rigidness', 'damping', 'forcePower',, 'targetVelocityLimit', 'targetVelocityLimitPower', 'stopAtTarget'], function (k) {
+	$$.Simulation.Spring.prototype[k] = function (value) {
+		if (arguments.length == 0) {
+			return this['_' + k];
+		}
+
+		this['_' + k] = value;
+	};
+});;
+'use strict';
+
+var $$ = $$ || {};
+
+$$.extend = function (Child, Parent) {
+	var F = function F() {};
+	F.prototype = Parent.prototype;
+	Child.prototype = new F();
+	Child.prototype.constructor = Child;
+	Child.superclass = Parent.prototype;
+};
+
+$$.trim = function (str, charlist) {
+	charlist = !charlist ? ' \\s\xA0' : charlist.replace(/([\[\]\(\)\.\?\/\*\{\}\+\$\^\:])/g, '\$1');
+	var re = new RegExp('^[' + charlist + ']+|[' + charlist + ']+$', 'g');
+	return str.replace(re, '');
+};
+
+$$.parseUrlParams = function (url) {
+	var url = url || location.href;
+	var searchParam = {};
+	var regExpParams = /\?{1}.+/;
+
+	if (regExpParams.test(url)) {
+		url = url.replace(regExpParams, '');
+
+		var urlParams = location.search.replace('?', '');
+		urlParams = urlParams.split('&');
+
+		_.each(urlParams, function (item, index, list) {
+			var param = item.split('=');
+			searchParam[param[0]] = param[1];
+		});
+	}
+	return searchParam;
+};
+
+$$.clamp = function (value, min, max) {
+	return Math.min(max, Math.max(min, value));
+};
+
+$$.timeLine = function (startTime, factor, finishTime) {
+	function getDecimal(num) {
+		return +(num % 1).toFixed(6);
+	}
+
+	var time = [];
+	var j = 0;
+	for (var i = startTime; i <= finishTime; i += factor) {
+
+		if (i >= 24) {
+			time.push(Math.floor(j) + ':' + getDecimal(j) * 6 + '0');
+			j += 0.5;
+		} else {
+			time.push(Math.floor(i) + ':' + getDecimal(i) * 6 + '0');
+		}
+	}
+	return time;
+};
+
+$$.hoursToMinutes = function (from, to) {
+	var minutesInHours = (to.replace(':', '').substr(0, 2) - from.replace(':', '').substr(0, 2)) * 60;
+	var minutes = to.replace(':', '').substr(2) - from.replace(':', '').substr(2);
+	return minutes + minutesInHours;
+};;
 "use strict";
 
 $$ = $$ || {};
@@ -104,20 +668,6 @@ $$.Model.Index = (function () {
 				};
 			}
 
-			ko.bindingHandlers.myBind = {
-				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
-					_.each(valueAccessor(), function (object, key) {
-						var field = new $$.FieldType[object.fieldType]({
-							bindKey: key,
-							column: 's2'
-						});
-
-						$(element).append(field.template);
-					});
-				},
-				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
-			};
-
 			ko.applyBindings(new TestViewModel());
 		}
 	}, {
@@ -130,7 +680,7 @@ $$.Model.Index = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '<h1>Index</h1>\n\t\t<div data-bind="foreach: names">\n\t\t\t<div class="row" data-bind="myBind: $data"></div>\n\t\t</div>\n\t\t<button data-bind="click: test">test</button>\n\t\t';
+			this.template = '<h1>Index</h1>\n\t\t<div data-bind="foreach: names">\n\t\t\t<div class="row" data-bind="tableTypes: $data"></div>\n\t\t</div>\n\t\t<button data-bind="click: test">test</button>\n\t\t';
 		}
 	}]);
 
@@ -215,10 +765,8 @@ $$.Model.Table = (function () {
 			Integer: faker.random.number,
 			String: faker.name.title,
 			Text: faker.lorem.sentences, //(number) - количество предложений
-			Media: faker.random.number //({min: 150,max: 200})
+			Media: faker.image.technics //({min: 150,max: 200})
 		};
-
-		/*console.log(faker.fake('{{lorem}}, {{name.firstName}}'));*/
 
 		this._template();
 		this.initialize();
@@ -307,14 +855,30 @@ $$.Model.Table = (function () {
 
 			records += '<td><a href="#"><i class="material-icons" data-bind="click: $parent.deleteRecord">delete</i></a></td>';
 
-			this.root.find('table').html('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr data-bind="foreach: keys">\n\t\t\t\t\t\t\t\t\t<th data-bind="text: value"></th>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t<tbody data-bind="foreach: names">\n\t\t \t\t\t\t\t\t<tr>\n\t\t\t\t\t\t\t\t\t' + records + '\n\t\t\t\t\t\t\t\t </tr>\n\t\t\t\t\t\t\t </tbody>\n\t\t\t\t\t\t\t');
+			this.root.find('table').html('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr data-bind="foreach: keys">\n\t\t\t\t\t\t\t\t\t<th data-bind="text: value"></th>\n\t\t\t\t\t\t\t\t</tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t<tbody data-bind="foreach: fields">\n\t\t \t\t\t\t\t\t<tr data-bind="tableTypes: $data"></tr>\n\t\t\t\t\t\t\t </tbody>\n\t\t\t\t\t\t\t');
+
+			ko.bindingHandlers.tableTypes = {
+				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+					_.each(valueAccessor(), function (object, key) {
+						var field = new $$.FieldType[object.fieldType]({
+							bindKey: key,
+							column: 's12'
+						});
+
+						$(element).append('<td>' + field.template + '</td>');
+					});
+
+					$(element).append('<td><a href="#"><i class="material-icons" data-bind="click: $parent.deleteRecord">delete</i></a></td>');
+				},
+				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
+			};
 
 			function ReservationsViewModel(response) {
 				var _this5 = this;
 
 				var self = this;
 
-				this.names = ko.observableArray([]);
+				this.fields = ko.observableArray([]);
 				this.keys = ko.observableArray([]);
 
 				_this.modelKeys.forEach(function (key) {
@@ -323,12 +887,8 @@ $$.Model.Table = (function () {
 
 				var model = {};
 
-				_.each(_this.model, function (object, key) {
-					model[key] = object;
-				});
-
 				response.forEach(function (record) {
-					_this5.names.push(record);
+					_this5.fields.push(record);
 				});
 
 				self.saveTable = function () {
@@ -337,7 +897,7 @@ $$.Model.Table = (function () {
 						url: 'core/TableSave.php',
 						data: {
 							tableName: _this.options.tableName,
-							data: ko.toJSON(self.names)
+							data: ko.toJSON(self.fields)
 						},
 						success: function success(response) {
 							response = $.parseJSON(response);
@@ -352,35 +912,38 @@ $$.Model.Table = (function () {
 				};
 
 				self.addRandomRecord = function () {
-					_.each(model, function (object, key) {
+					_.each(_this.model, function (object, key) {
 						if (object.fieldType === 'Text') {
 							object.value = _this.fakerObject[object.fieldType](5);
 						} else if (object.fieldType === 'Media') {
-							object.value = '' + _this.fakerObject[object.fieldType]({
-								min: 150,
-								max: 200
-							});
-
-							object.value += 'x';
-
-							object.value += '' + _this.fakerObject[object.fieldType]({
-								min: 150,
-								max: 200
-							});
+							object.value = '' + _this.fakerObject[object.fieldType]();
+							/*object.value = `${_this.fakerObject[object.fieldType]({
+        min: 150,
+        max: 200
+        })}`;
+       		 object.value += 'x';
+       		 object.value += `${_this.fakerObject[object.fieldType]({
+        min: 150,
+        max: 200
+        })}`;*/
 						} else {
-							object.value = _this.fakerObject[object.fieldType]();
-						}
+								object.value = _this.fakerObject[object.fieldType]();
+							}
 					});
 
-					this.names.push(model);
+					this.fields.push(_this.model);
 				};
 
 				self.addRecord = function () {
-					this.names.push(_this.model);
+					_.each(_this.model, function (object, key) {
+						object.value = "";
+					});
+
+					this.fields.push(_this.model);
 				};
 
 				self.deleteRecord = function () {
-					self.names.remove(this);
+					self.fields.remove(this);
 				};
 			}
 
@@ -590,8 +1153,8 @@ $$.FieldType.Boolean = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + ' switch">\n\t\t\t    <label for="' + this.options.uniqueId + '">\n\t\t\t      Off\n\t\t\t      <input type="checkbox" id="' + this.options.uniqueId + '" data-bind="checked: ' + this.options.bindKey + '.value">\n\t\t\t      <span class="lever"></span>\n\t\t\t      On\n\t\t\t    </label>\n\t\t    </div>';
+			//col ${this.options.column}
+			this.template = '\n\t\t\t<div class="input-field switch">\n\t\t\t    <label for="' + this.options.uniqueId + '">\n\t\t\t      Off\n\t\t\t      <input type="checkbox" id="' + this.options.uniqueId + '" data-bind="checked: ' + this.options.bindKey + '.value">\n\t\t\t      <span class="lever"></span>\n\t\t\t      On\n\t\t\t    </label>\n\t\t    </div>';
 		}
 	}]);
 
@@ -625,8 +1188,8 @@ $$.FieldType.Integer = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			//col ${this.options.column}
+			this.template = '\n\t\t\t<div class="input-field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 		}
 	}]);
 
@@ -662,8 +1225,8 @@ $$.FieldType.Media = (function () {
 			"use strict";
 
 			var id = _.uniqueId('input_');
-
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			//col ${this.options.column}
+			this.template = '\n\t\t\t<div class="input-field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 		}
 	}]);
 
@@ -699,8 +1262,8 @@ $$.FieldType.String = (function () {
 			"use strict";
 
 			var id = _.uniqueId('input_');
-
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			//col ${this.options.column}
+			this.template = '\n\t\t\t<div class="input-field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 		}
 	}]);
 
@@ -736,8 +1299,8 @@ $$.FieldType.Text = (function () {
 			"use strict";
 
 			var id = _.uniqueId('textarea_');
-
-			this.template = '\n\t\t\t<div class="input-field col ' + this.options.column + '">\n\t          <textarea id="' + this.options.uniqueId + '" class="materialize-textarea" data-bind="value: ' + this.options.bindKey + '.value, uniqueName: true"></textarea>\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			//col ${this.options.column}
+			this.template = '\n\t\t\t<div class="input-field">\n\t          <textarea id="' + this.options.uniqueId + '" class="materialize-textarea" data-bind="value: ' + this.options.bindKey + '.value, uniqueName: true"></textarea>\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
 
 			/*$(`#${id}`).on('change', function () {
     $(this).trigger('autoresize');

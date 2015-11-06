@@ -1,0 +1,206 @@
+@import "../mixins";
+
+.b-product-cards {
+	position: relative;
+	height: 337px;
+
+	.left-button {
+		position: absolute;
+		z-index: 3;
+		opacity: 0;
+		left: 0;
+		top: 0;
+		width: 43px;
+		height: 100%;
+		background: fade(@white, 80%);
+		cursor: pointer;
+		.transition(opacity);
+	}
+
+	.right-button {
+		position: absolute;
+		z-index: 3;
+		opacity: 0;
+		right: 0;
+		top: 0;
+		width: 43px;
+		height: 100%;
+		background: fade(@white, 80%);
+		cursor: pointer;
+		.transition(opacity);
+	}
+
+	.inner {
+		overflow: hidden;
+		width: 100%;
+		height: 100%;
+	}
+
+	.navigate-icon {
+		.center-position();
+		color: @blue;
+	}
+
+	.cards-wrapper {
+		position: absolute;
+		overflow: hidden;
+		z-index: 1;
+		top: 79px;
+		height: 262px;
+		.transition(height);
+		.transition(padding-bottom);
+
+		&:hover,
+		&.active {
+			z-index: 5;
+			height: 284px;
+
+			.right-button,
+			.left-button {
+				opacity: 1;
+			}
+
+			.progress-wrapper {
+				height: 24px;
+			}
+
+			.progress {
+				height: 20px;
+				margin-top: 2px;
+			}
+		}
+	}
+
+	.progress-wrapper {
+		position: absolute;
+		z-index: 5;
+		overflow: hidden;
+		left: -2px;
+		right: -2px;
+		bottom: 0;
+		width: 100%;
+		height: 1px;
+		margin-top: -5px;
+		box-shadow: inset 0 0 5px fade(@lightShadowGray, 50%);
+		background: @white;
+		.transition(height);
+	}
+
+	.progress {
+		height: 100%;
+		background: @blue;
+		cursor: pointer;
+	}
+
+	.cards {
+		display: table;
+		height: 260px;
+
+		.card {
+			display: table-cell;
+			position: relative;
+			.border(@lightGray, 1px 1px 1px 0);
+			padding: 20px 19px 0;
+			width: 240px;
+			height: 262px;
+			min-width: 240px;
+			max-width: 240px;
+
+			.marker {
+				position: absolute;
+				top: 20px;
+				left: 19px;
+				z-index: 2;
+				padding: 0 5px;
+				height: 20px;
+				background: @orange;
+				.font(14px, @proximaNovaLight, @white, 20px);
+
+				&:after {
+					.pseudo(2px, 2px);
+					background: @white;
+					top: 9px;
+					right: -3px;
+				}
+
+				&:before {
+					.pseudo(0, 0);
+					top: 0;
+					right: -6px;
+					color: @white;
+					.border(transparent transparent transparent @orange, 10px 0 10px 6px);
+				}
+
+				&.new {
+					background: @lightGreen;
+
+					&:before {
+						border-left-color: @lightGreen;
+					}
+				}
+
+				&.discount {
+					background: @redOrange;
+
+					&:before {
+						border-left-color: @redOrange;
+					}
+				}
+			}
+
+			.image-wrapper {
+				height: 155px;
+				line-height: 155px;
+				// TODO: check the alignment adjustment
+				text-align: center;
+
+				.image {
+					max-width: 100%;
+					max-height: 155px;
+				}
+			}
+
+			.category,
+			.name {
+				overflow: hidden;
+				display: block;
+				margin: 0;
+				padding: 0;
+				.font(14px, @proximaNovaLight, @blue, 1.5);
+				text-overflow: ellipsis;
+				white-space: nowrap;
+			}
+
+			.price-wrapper {
+				.inline-list(middle);
+				position: absolute;
+				left: 19px;
+				right: 0;
+				bottom: 17px;
+				margin: 0;
+				padding: 0;
+				white-space: nowrap;
+				letter-spacing: -2.4px;
+
+				.price {
+					padding-right: 4px;
+					.font(18px, @alsRubl, @dark, 21px);
+
+					&.old {
+						padding-left: 20px;
+						color: @blueGray;
+						text-decoration: line-through;
+					}
+				}
+
+				.rub {
+					.font(18px, @alsRubl, @dark, 21px);
+
+					&.old {
+						color: @blueGray;
+					}
+				}
+			}
+		}
+	}
+}

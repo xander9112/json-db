@@ -1,0 +1,135 @@
+@import "../mixins";
+
+.b-main-slider {
+	overflow: hidden;
+	width: 100%;
+	height: 300px;
+	background: @lightBlueGray;
+
+	.left-button {
+		position: absolute;
+		z-index: 3;
+		opacity: 0;
+		left: 0;
+		top: 0;
+		width: 43px;
+		height: 100%;
+		background: fade(@white, 40%);
+		cursor: pointer;
+		.transition(opacity);
+	}
+
+	.right-button {
+		position: absolute;
+		z-index: 3;
+		opacity: 0;
+		right: 0;
+		top: 0;
+		width: 43px;
+		height: 100%;
+		background: fade(@white, 40%);
+		cursor: pointer;
+		.transition(opacity);
+	}
+
+	.outer {
+		overflow: hidden;
+		width: 100%;
+		height: 100%;
+	}
+
+	.navigate-icon {
+		.center-position();
+		color: @blue;
+	}
+
+	.pages {
+		.center-position-horizontally();
+		.inline-list();
+		z-index: 2;
+		bottom: 38px;
+		height: 12px;
+	}
+
+	.page {
+		width: 10px;
+		height: 10px;
+		margin-right: 6px;
+		border: 1px solid @blue;
+		border-radius: 6px;
+		cursor: pointer;
+
+		&.active {
+			width: 2px;
+			height: 2px;
+			border-width: 5px;
+		}
+	}
+
+	.items {
+		.inline-list();
+		.clearfix();
+		position: relative;
+		margin: 0;
+		padding: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.item {
+		width: 100%;
+		height: 100%;
+		list-style: none;
+	}
+
+	.inner {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		padding: 0 60px;
+	}
+
+	.slider-header {
+		position: relative;
+		z-index: 2;
+		margin: 0;
+		padding: 0;
+		.font(30px, @proximaNovaBold, @lightBlue, 36px);
+		white-space: pre-line;
+	}
+
+	.slider-text {
+		position: relative;
+		z-index: 2;
+		width: 100%;
+		margin: -10px 0 0;
+		padding: 0;
+		.font(16px, @proximaNovaLight, @dark, 24px);
+		white-space: pre-line;
+	}
+
+	.link {
+		position: absolute;
+		z-index: 2;
+		bottom: 24px;
+		.font(16px, @proximaNovaSemiBold, @blue, 40px);
+	}
+
+	.image {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		z-index: 1;
+	}
+
+	&:hover {
+		.right-button,
+		.left-button {
+			opacity: 1;
+		}
+
+		.progress-wrapper {
+			height: 22px;
+		}
+	}
+}

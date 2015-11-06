@@ -81,7 +81,7 @@ $$.Model.Index = class ModelIndex {
 						value: "Крутой товар 2",
 						fieldType: "String"
 					}
-				},
+				}
 			]);
 
 			this.test = function () {
@@ -90,20 +90,6 @@ $$.Model.Index = class ModelIndex {
 		}
 
 
-		ko.bindingHandlers.myBind = {
-			init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-				_.each(valueAccessor(), (object, key) => {
-					var field = new $$.FieldType[object.fieldType]({
-						bindKey: key,
-						column: 's2'
-					});
-
-					$(element).append(field.template);
-				});
-			},
-			update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-			}
-		};
 
 		ko.applyBindings(new TestViewModel());
 	}
@@ -117,9 +103,9 @@ $$.Model.Index = class ModelIndex {
 		"use strict";
 		this.template = `<h1>Index</h1>
 		<div data-bind="foreach: names">
-			<div class="row" data-bind="myBind: $data"></div>
+			<div class="row" data-bind="tableTypes: $data"></div>
 		</div>
 		<button data-bind="click: test">test</button>
 		`;
 	}
-}
+};

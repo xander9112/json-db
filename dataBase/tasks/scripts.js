@@ -6,7 +6,7 @@ gulp.task('scripts', ['scripts.app', 'scripts.vendor']);
 
 gulp.task('scripts.app', function () {
 	return gulp.src([
-		//'site/src/js/utils/*.js',
+		'site/src/js/utils/*.js',
 		'site/src/js/Base.js',
 		'site/src/js/Models/**/*.js',
 		'site/src/js/Components/**/*.js',

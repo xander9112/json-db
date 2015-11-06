@@ -1,5 +1,7 @@
 "use strict";
 
+var $$ = $$ || {};
+
 $$.Simulation = $$.Simulation || {};
 
 /**
@@ -109,7 +111,7 @@ $$.Simulation.SpringSimulator = function () {
 				spring._step.call();
 			}
 		}
-	}, 20);
+	}, 16);
 };
 
 $$.Simulation.SpringSimulator.prototype = {
@@ -130,6 +132,8 @@ $$.Simulation.SpringSimulator.prototype = {
 
 $$.Simulation.__springSimulator = new $$.Simulation.SpringSimulator();
 'use strict';
+
+var $$ = $$ || {};
 
 $$.Simulation = $$.Simulation || {};
 
@@ -226,7 +230,7 @@ $$.Simulation.Spring.prototype = {
 
 // Создать методы-аксессоры.
 
-_.each(['frozen', 'position', 'positionLimits', 'velocity', 'velocityLimit', 'rigidness', 'damping', 'forcePower',, 'targetVelocityLimit', 'targetVelocityLimitPower', 'stopAtTarget'], function (k) {
+_.each(['frozen', 'position', 'positionLimits', 'velocity', 'velocityLimit', 'rigidness', 'damping', 'forcePower', 'targetVelocityLimit', 'targetVelocityLimitPower', 'stopAtTarget'], function (k) {
 	$$.Simulation.Spring.prototype[k] = function (value) {
 		if (arguments.length == 0) {
 			return this['_' + k];
@@ -325,146 +329,204 @@ $$.makeVideoPlayerHtml = function (videoType, videoId, width, height) {
 
 	return '';
 };
+'use strict';
 
-$$.ScrollWidth = function () {
-	// создадим элемент с прокруткой
-	var div = document.createElement('div');
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-	div.style.overflowY = 'scroll';
-	div.style.width = '50px';
-	div.style.height = '50px';
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	// при display:none размеры нельзя узнать
-	// нужно, чтобы элемент был видим,
-	// visibility:hidden - можно, т.к. сохраняет геометрию
-	div.style.visibility = 'hidden';
+var $$ = $$ || {};
 
-	document.body.appendChild(div);
-	var scrollWidth = div.offsetWidth - div.clientWidth;
-	document.body.removeChild(div);
+$$.BannerSlider = (function () {
+	function BannerSlider(root, options) {
+		_classCallCheck(this, BannerSlider);
 
-	return scrollWidth;
-};
+		this.root = root;
 
-$$.FakerInfo = function (block) {
-	var news = block.find('.news-block');
+		this.options = {
+			scrollStep: 400,
+			duration: 300
+		};
 
-	news.each(function () {
-		var item = $(this);
-		var hasImage = item.find('img').length == 0 ? false : true;
-		var hasTitle = item.find('.title').length == 0 ? false : true;
+		_.assign(this.options, options);
 
-		if (hasTitle) {
-			var title = item.find('.title');
-			var subtitle = item.find('.subtitle');
-			var description = item.find('.description');
-			var date = item.find('.date');
-			var rating = item.find('.rating');
-
-			var timeDate = new Date(faker.date.between(2010, 2014));
-			var curr_date = timeDate.getDate();
-			var curr_month = timeDate.getMonth() + 1;
-			var curr_year = timeDate.getFullYear() % 1000;
-			var formatDate = curr_date + "." + numb(curr_month) + "." + curr_year;
-			var formatTime = numb(timeDate.getHours()) + ":" + numb(timeDate.getMinutes());
-
-			date.text(formatDate + ', ' + formatTime);
-			title.text(faker.lorem.words(1)[0]);
-			subtitle.text(faker.lorem.paragraph(1));
-			description.text(faker.lorem.paragraph(1));
-			rating.text($$.getRandomInt(0, 4) + '.' + $$.getRandomInt(0, 9));
-		}
-
-		if (hasImage) {
-			var width = item.width();
-			var height = item.height();
-			item.find('img').attr('src', faker.image.imageUrl(width, height, 'transport'));
-		}
-	});
-
-	function numb(number) {
-		if (number < 10) {
-			return '0' + number;
-		} else {
-			return number;
-		}
-	}
-};
-
-$$.number_format = function (number, decimals, dec_point, thousands_sep) {
-	number = (number + '').replace(/[^0-9+\-Ee.]/g, '');
-	var n = !isFinite(+number) ? 0 : +number,
-	    prec = !isFinite(+decimals) ? 0 : Math.abs(decimals),
-	    sep = typeof thousands_sep === 'undefined' ? ',' : thousands_sep,
-	    dec = typeof dec_point === 'undefined' ? '.' : dec_point,
-	    s = '',
-	    toFixedFix = function toFixedFix(n, prec) {
-		var k = Math.pow(10, prec);
-		return '' + Math.round(n * k) / k;
-	};
-	s = (prec ? toFixedFix(n, prec) : '' + Math.round(n)).split('.');
-	if (s[0].length > 3) {
-		s[0] = s[0].replace(/\B(?=(?:\d{3})+(?!\d))/g, sep);
-	}
-	if ((s[1] || '').length < prec) {
-		s[1] = s[1] || '';
-		s[1] += new Array(prec - s[1].length + 1).join('0');
-	}
-	return s.join(dec);
-};
-"use strict";
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var Component = (function (_$$$Emitter) {
-	_inherits(Component, _$$$Emitter);
-
-	function Component() {
-		_classCallCheck(this, Component);
-
-		_get(Object.getPrototypeOf(Component.prototype), "constructor", this).call(this);
-		$$.Emitter.call(this);
-
-		for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-			args[_key] = arguments[_key];
-		}
-
-		if (args.length === 1) {
-			this.root = args[0];
-		} else if (args.length === 2) {
-			this.root = args[0];
-			this.options = args[1];
-		}
-
-		this.initialize();
+		this._cacheNodes();
+		this._bindEvents();
+		this._ready();
 	}
 
-	_createClass(Component, [{
-		key: "initialize",
-		value: function initialize() {
-			this._cacheNodes();
-			this._bindEvents();
-			this._ready();
+	_createClass(BannerSlider, [{
+		key: '_cacheNodes',
+		value: function _cacheNodes() {
+			this.nodes = {
+				inner: this.root.find('.js-inner'),
+				itemsWrapper: this.root.find('.js-items'),
+				items: this.root.find('.js-item'),
+				backwardButton: this.root.find('.js-backward-button'),
+				forwardButton: this.root.find('.js-forward-button'),
+				pageWrapper: this.root.find('.js-pages'),
+				pages: this.root.find('.js-page')
+			};
 		}
 	}, {
-		key: "_cacheNodes",
-		value: function _cacheNodes() {}
+		key: '_bindEvents',
+		value: function _bindEvents() {
+			var _this = this;
+
+			this.nodes.backwardButton.on('click', function () {
+				//this._goTo(-this.scrollStep);
+				_this._checkoutSlide(_this.currentSlide - 1);
+			});
+
+			this.nodes.forwardButton.on('click', function () {
+				//this._goTo(this.scrollStep);
+				_this._checkoutSlide(_this.currentSlide + 1);
+			});
+
+			this.nodes.pages.on('click', function () {
+				var slideNumber = $(event.target).index();
+				var scrollStep = 0;
+
+				if (slideNumber > _this.currentSlide) {
+					scrollStep = _this.scrollStep;
+				} else if (slideNumber < _this.currentSlide) {
+					scrollStep = -_this.scrollStep;
+				}
+
+				_this._checkoutSlide(slideNumber);
+			});
+		}
 	}, {
-		key: "_bindEvents",
-		value: function _bindEvents() {}
+		key: '_ready',
+		value: function _ready() {
+			var containerWidth = this.nodes.itemsWrapper.width();
+			var slideWidth = this.nodes.inner.width();
+
+			this.currentSlide = 0;
+			this.isAnimating = false;
+
+			this.nodes.items.css({ width: slideWidth });
+			this.nodes.itemsWrapper.css({ width: slideWidth * this.nodes.items.length });
+			this.scrollStep = this.nodes.items.first().width();
+			this.rightLimit = this.nodes.itemsWrapper.width();
+		}
 	}, {
-		key: "_ready",
-		value: function _ready() {}
+		key: '_checkoutSlide',
+		value: function _checkoutSlide(slideNumber) {
+			var _this2 = this;
+
+			if (this.isAnimating) {
+				return;
+			}
+
+			if (slideNumber < 0) {
+				this._limitScroll(false);
+				return;
+			} else if (slideNumber >= this.nodes.items.length) {
+				this._limitScroll(true);
+				return;
+			}
+
+			this.isAnimating = true;
+			this.nodes.pages.eq(this.currentSlide).removeClass('active');
+			this.currentSlide = slideNumber;
+			this.nodes.pages.eq(this.currentSlide).addClass('active');
+
+			this.nodes.inner.animate({
+				scrollLeft: slideNumber * this.scrollStep
+			}, this.options.duration, 'swing', function () {
+				_this2.isAnimating = false;
+			});
+		}
+	}, {
+		key: '_goTo',
+		value: function _goTo(slideNumber) {
+			var _this3 = this;
+
+			if (step === 0 || this.isAnimating) {
+				return;
+			}
+
+			this.isAnimating = true;
+
+			var currentPosition = this.nodes.inner.scrollLeft() + step;
+
+			if (currentPosition < 0) {
+				this._limitScroll(false);
+				return;
+			} else if (currentPosition > this.rightLimit) {
+				this._limitScroll(true);
+				return;
+			}
+
+			this.nodes.inner.animate({
+				scrollLeft: currentPosition
+			}, this.options.duration, 'swing', function () {
+				_this3.isAnimating = false;
+			});
+		}
+	}, {
+		key: '_limitScroll',
+		value: function _limitScroll(isToStart) {
+			if (isToStart) {
+				this._goToStart();
+			} else {
+				this._goToEnd();
+			}
+		}
+	}, {
+		key: '_goToEnd',
+		value: function _goToEnd() {
+			var _this4 = this;
+
+			var slideItem = this.nodes.items.last().clone();
+			var slideWidth = slideItem.width();
+			var containerWidth = this.nodes.itemsWrapper.width();
+
+			this.nodes.itemsWrapper.prepend(slideItem);
+			this.nodes.itemsWrapper.width(containerWidth + slideItem.width());
+
+			this.nodes.pages.eq(this.currentSlide).removeClass('active');
+			this.currentSlide = this.nodes.pages.length - 1;
+			this.nodes.pages.eq(this.currentSlide).addClass('active');
+
+			this.nodes.inner.scrollLeft(slideWidth);
+
+			this.nodes.inner.animate({
+				scrollLeft: 0
+			}, this.options.duration, 'swing', function () {
+				_this4.nodes.inner.scrollLeft((_this4.nodes.items.length - 1) * slideWidth);
+				slideItem.remove();
+				_this4.nodes.itemsWrapper.width(containerWidth);
+			});
+		}
+	}, {
+		key: '_goToStart',
+		value: function _goToStart() {
+			var _this5 = this;
+
+			var slideItem = this.nodes.items.first().clone();
+			var containerWidth = this.nodes.itemsWrapper.width();
+
+			this.nodes.itemsWrapper.append(slideItem);
+			this.nodes.itemsWrapper.width(containerWidth + slideItem.width());
+
+			this.nodes.pages.eq(this.currentSlide).removeClass('active');
+			this.currentSlide = 0;
+			this.nodes.pages.eq(this.currentSlide).addClass('active');
+
+			this.nodes.inner.animate({
+				scrollLeft: this.nodes.items.length * this.scrollStep
+			}, this.options.duration, 'swing', function () {
+				_this5.nodes.inner.scrollLeft(0);
+				slideItem.remove();
+				_this5.nodes.itemsWrapper.width(containerWidth);
+			});
+		}
 	}]);
 
-	return Component;
-})($$.Emitter);
+	return BannerSlider;
+})();
 'use strict';
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -713,15 +775,9 @@ var MercatorProjection = (function () {
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-var _get = function get(_x3, _x4, _x5) { var _again = true; _function: while (_again) { var object = _x3, property = _x4, receiver = _x5; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x3 = parent; _x4 = property; _x5 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var MainSlider = (function (_Component) {
-	_inherits(MainSlider, _Component);
-
+var MainSlider = (function () {
 	function MainSlider() {
 		var root = arguments.length <= 0 || arguments[0] === undefined ? $ : arguments[0];
 		var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
@@ -730,7 +786,7 @@ var MainSlider = (function (_Component) {
 
 		var defaultOptions = {};
 
-		_get(Object.getPrototypeOf(MainSlider.prototype), 'constructor', this).call(this, root, _.merge(options || {}, defaultOptions, _.defaults));
+		//super(root, _.merge(options || {}, defaultOptions, _.defaults));
 
 		//$$.Emitter.call(this);
 	}
@@ -909,7 +965,176 @@ var MainSlider = (function (_Component) {
 	}]);
 
 	return MainSlider;
-})(Component);
+})();
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var $$ = $$ || {};
+
+$$.Slider = (function () {
+	function Slider(root, options) {
+		_classCallCheck(this, Slider);
+
+		this.root = root;
+
+		this.options = {
+			scrollStep: 300,
+			duration: 300,
+			rigidness: 40,
+			damping: 0.9,
+			from: 0,
+			to: 0,
+			targetLimits: [0, 1],
+			positionLimits: [0, 1]
+		};
+
+		_.assign(this.options, options);
+
+		this.currentOffset = 0;
+		this.previousOffset = 0;
+
+		this._cacheNodes();
+		this._createComponents();
+		this._bindEvents();
+		this._ready();
+	}
+
+	_createClass(Slider, [{
+		key: '_cacheNodes',
+		value: function _cacheNodes() {
+			this.nodes = {
+				inner: this.root.find('.js-inner'),
+				itemsWrapper: this.root.find('.js-items'),
+				items: this.root.find('.js-item'),
+				backwardButton: this.root.find('.js-backward-button'),
+				forwardButton: this.root.find('.js-forward-button'),
+				progressWrapper: this.root.find('.js-progress-wrapper'),
+				progress: this.root.find('.js-progress')
+			};
+		}
+	}, {
+		key: '_createComponents',
+		value: function _createComponents() {
+			var self = this;
+			var roundFactor = 10000;
+
+			this.spring = new $$.Simulation.Spring({
+				rigidness: this.options.rigidness,
+				damping: this.options.damping,
+				position: this.options.from,
+				target: this.options.to,
+				positionLimits: this.options.targetLimits,
+				step: function step() {
+					var roundPosition = Math.round(this.position() * roundFactor) / roundFactor;
+					var roundTarget = Math.round(this.target() * roundFactor) / roundFactor;
+
+					if (roundPosition === roundTarget && !self.force) {
+						return;
+					}
+
+					self.force = false;
+
+					var position = Math.round(this.position() * roundFactor) / roundFactor;
+
+					self.nodes.progress.css({
+						marginLeft: Math.round(position * self.maxScrollBarPosition)
+					});
+
+					self.nodes.inner.scrollLeft(position * self.rightLimit);
+				}
+			});
+		}
+	}, {
+		key: '_bindEvents',
+		value: function _bindEvents() {
+			var _this = this;
+
+			this.nodes.backwardButton.on('click', function () {
+				_this._goTo(-_this.scrollStep);
+			});
+
+			this.nodes.forwardButton.on('click', function () {
+				_this._goTo(_this.scrollStep);
+			});
+
+			this.nodes.progress.on('drag', { relative: true }, function (event, data) {
+				_this._scrollTo(data.offsetX - data.originalX + _this.previousOffset);
+				_this.root.addClass('active');
+			});
+
+			this.nodes.progress.on('dragend', function () {
+				_this.previousOffset = _this.currentOffset;
+				_this.root.removeClass('active');
+			});
+
+			$$.window.on('resize', function () {
+				_this._calculateScrollWidth();
+			});
+		}
+	}, {
+		key: '_ready',
+		value: function _ready() {
+			this._calculateScrollWidth();
+
+			this.currentSlide = 0;
+			this.scrollStep = this.options.scrollStep;
+		}
+	}, {
+		key: '_calculateScrollWidth',
+		value: function _calculateScrollWidth() {
+			var containerWidth = this.nodes.itemsWrapper.width();
+			var progressBarWidth = 100 * this.root.width() / containerWidth;
+
+			this.nodes.progress.css({ width: progressBarWidth + '%' });
+			this.rightLimit = containerWidth - this.root.width();
+
+			if (progressBarWidth < 100) {
+				this.maxScrollBarPosition = this.nodes.inner.width() - this.nodes.progress.width();
+				this.nodes.forwardButton.removeClass('hidden');
+				this.nodes.backwardButton.removeClass('hidden');
+				this.nodes.progressWrapper.removeClass('hidden');
+			} else {
+				this.nodes.forwardButton.addClass('hidden');
+				this.nodes.backwardButton.addClass('hidden');
+				this.nodes.progressWrapper.addClass('hidden');
+			}
+		}
+	}, {
+		key: '_scrollTo',
+		value: function _scrollTo(offset) {
+			var ratio = this.options.targetLimits[1] / this.maxScrollBarPosition;
+			var position = offset * ratio;
+
+			if (position < -1 || offset < 0) {
+				this.previousOffset = this.currentOffset;
+				return;
+			}
+
+			position = $$.clamp(position, 0, 1);
+			this.spring.target(position);
+			this.currentOffset = offset;
+		}
+	}, {
+		key: '_goTo',
+		value: function _goTo(step) {
+			var offset = step + this.currentOffset;
+
+			if (offset < 0) {
+				offset = 0;
+			} else if (offset > this.rightLimit) {
+				offset = this.rightLimit;
+			}
+
+			//console.log(offset)
+			this._scrollTo(offset);
+		}
+	}]);
+
+	return Slider;
+})();
 'use strict';
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -922,14 +1147,22 @@ var Application = (function () {
 	function Application() {
 		_classCallCheck(this, Application);
 
-		this._initGoogleMap();
+		this._initMainSlider();
+		this._initSlider();
 	}
 
 	_createClass(Application, [{
-		key: '_initGoogleMap',
-		value: function _initGoogleMap() {
-			$('.b-map').each(function () {
-				$$.googleMap = new GoogleMap(mapBlock);
+		key: '_initMainSlider',
+		value: function _initMainSlider() {
+			$('.js-main-slider').each(function () {
+				new $$.BannerSlider($(this));
+			});
+		}
+	}, {
+		key: '_initSlider',
+		value: function _initSlider() {
+			$('.js-slider').each(function () {
+				new $$.Slider($(this));
 			});
 		}
 	}]);
@@ -938,6 +1171,15 @@ var Application = (function () {
 })();
 
 $(function () {
+	$$.window = $(window);
+	$$.body = $(document.body);
+	$$.windowWidth = $$.window.width();
+	$$.windowHeight = $$.window.height();
 	$$.application = new Application();
+
+	$$.window.on('resize', function () {
+		$$.windowWidth = $$.window.width();
+		$$.windowHeight = $$.window.height();
+	});
 });
 //# sourceMappingURL=app.js.map

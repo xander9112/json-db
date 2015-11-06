@@ -11,7 +11,11 @@ gulp.task('styles', function () {
 	return gulp.src([
 		'site/src/less/grids.less',
 		'site/src/less/grids-responsive.less',
-		'site/src/less/*.less'
+		'site/src/less/bootstrap.less',
+		'site/src/less/bootstrap-theme.less',
+		'site/src/less/page.less',
+		'site/src/less/*.less',
+		'site/src/less/**/*.less'
 	])
 		.pipe(less())
 		.pipe(autoprefixer({
