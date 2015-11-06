@@ -14,7 +14,7 @@ $$.Component.Route = class Route {
 	}
 
 	_registerRoutes () {
-		page.base('/dataBase');
+		page.base('/admin');
 
 		page('/', (options) => {
 			"use strict";

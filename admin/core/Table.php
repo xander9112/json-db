@@ -1,11 +1,6 @@
 <?php
-$url_prefix = '../../';
-$imageFolder = $url_prefix . '/data/images/';
-$dbPath = $url_prefix . './data/json/';
-require $url_prefix . "/JsonDB.class.php";
-$scanned_directory = array_diff(scandir($dbPath), array('..', '.'));
+require $url_prefix . "Core.php";
 
-$db = new JsonDB($dbPath);
 $table = $db->selectAll($_POST['tableName']);
 
 if(sizeof($table)) {

@@ -1,8 +1,9 @@
 <?php
 $url_prefix = '';
-$imageFolder = $url_prefix . '/data/images/';
+$imageFolder = '/data/images/';
+
 $dbPath = $url_prefix . './data/json/';
-require $url_prefix . "/JsonDB.class.php";
+require $url_prefix . "/admin/JsonDB.class.php";
 $db = new JsonDB($dbPath);  //parameter => directory to your json files
 ?>
 

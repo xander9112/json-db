@@ -23,9 +23,10 @@ $$.Component.Menu = class ComponentMenu {
 		this.template = $(`
 			<nav>
 		        <div class="nav-wrapper">
-			      <a href="/dataBase" class="brand-logo">DataBase</a>
+			      <a href="/admin" class="brand-logo">Admin</a>
 			      <ul id="nav-mobile" class="right hide-on-med-and-down">
 			        <li><a href="tables">Tables</a></li>
+			        <li><a href="/" target="_blank">На сайт</a></li>
 			      </ul>
 			    </div>
 		    </nav>`);

@@ -20,7 +20,8 @@
   "devDependencies": {
     "gulp-imagemin": "^2.3.0",
     "gulp.spritesmith": "^3.8.2",
-    "imagemin-jpegtran": "^4.3.0"
+    "imagemin-jpegtran": "^4.3.0",
+    "yargs": "^3.29.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
