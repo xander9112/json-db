@@ -1,10 +1,10 @@
 $$.FieldType.Text = class FieldTypeText {
 	constructor (options = {}) {
 		this.options = {
-			column:   's12',
-			label:    'Textarea',
-			bindKey:  '',
-			uniqueId: _.uniqueId('prefix_')
+			column: 's12',
+			label: 'Textarea',
+			bindKey: '',
+			uniqueId: _.uniqueId('text_')
 		};
 
 		_.assign(this.options, options);
@@ -14,18 +14,9 @@ $$.FieldType.Text = class FieldTypeText {
 
 	_template () {
 		"use strict";
-
-		var id = _.uniqueId('textarea_');
-		//col ${this.options.column}
 		this.template = `
-			<div class="input-field">
-	          <textarea id="${this.options.uniqueId}" class="materialize-textarea" data-bind="value: ${this.options.bindKey}.value, uniqueName: true"></textarea>
-	          <label class="active" for="${this.options.uniqueId}">${this.options.label}</label>
-	        </div>
-		`;
-
-		/*$(`#${id}`).on('change', function () {
-		 $(this).trigger('autoresize');
-		 });*/
+			<div class="field">
+	          <textarea id="${this.options.uniqueId}" data-bind="value: ${this.options.bindKey}.value, uniqueName: true" rows="1"></textarea>
+	        </div>`;
 	}
 };

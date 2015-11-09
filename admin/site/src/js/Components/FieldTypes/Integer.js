@@ -4,7 +4,7 @@ $$.FieldType.Integer = class FieldTypeInteger {
 			column: 's12',
 			label: 'Integer',
 			bindKey: '',
-			uniqueId: _.uniqueId('prefix_')
+			uniqueId: _.uniqueId('integer_')
 		};
 
 		_.assign(this.options, options);
@@ -14,12 +14,9 @@ $$.FieldType.Integer = class FieldTypeInteger {
 
 	_template () {
 		"use strict";
-		//col ${this.options.column}
 		this.template = `
-			<div class="input-field">
-	          <input placeholder="Placeholder" id="${this.options.uniqueId}" type="text" data-bind="value: ${this.options.bindKey}.value">
-	          <label class="active" for="${this.options.uniqueId}">${this.options.label}</label>
-	        </div>
-		`;
+			<div class="field">
+	          <input placeholder="Placeholder" id="${this.options.uniqueId}" type="number" data-bind="value: ${this.options.bindKey}.value">
+	        </div>`;
 	}
 };

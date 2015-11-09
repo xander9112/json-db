@@ -9,3 +9,4 @@
 </head>
 <body class="js-application">
 <header></header>
+<div class="g-messages"></div>

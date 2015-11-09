@@ -4,7 +4,7 @@ $$.FieldType.Boolean = class FieldTypeBoolean {
 			column: 's12',
 			label: 'Integer',
 			bindKey: '',
-			uniqueId: _.uniqueId('prefix_')
+			uniqueId: _.uniqueId('boolean_')
 		};
 
 		_.assign(this.options, options);
@@ -15,13 +15,10 @@ $$.FieldType.Boolean = class FieldTypeBoolean {
 		"use strict";
 		//col ${this.options.column}
 		this.template = `
-			<div class="input-field switch">
-			    <label for="${this.options.uniqueId}">
-			      Off
-			      <input type="checkbox" id="${this.options.uniqueId}" data-bind="checked: ${this.options.bindKey}.value">
-			      <span class="lever"></span>
-			      On
-			    </label>
-		    </div>`;
+				<div class="field center aligned">
+					<div class="ui toggle checkbox">
+						<input type="checkbox" id="${this.options.uniqueId}" data-bind="checked: ${this.options.bindKey}.value" tabindex="0" class="hidden">
+					</div>
+				</div>`;
 	}
 };

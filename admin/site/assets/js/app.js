@@ -597,78 +597,6 @@ $$.Model.Index = (function () {
 
 			"use strict";
 			this.root.html(this.template);
-
-			function TestViewModel() {
-				var self = this;
-
-				this.names = ko.observableArray([{
-					about: {
-						value: "Товар 2",
-						fieldType: "Text"
-					},
-					active: {
-						value: false,
-						fieldType: "Boolean"
-					},
-					id: {
-						value: "1", fieldType: "Integer"
-					},
-					imageUrl: {
-						value: "/data/images/card2.jpg",
-						fieldType: "Media"
-					},
-					title: {
-						value: "Крутой товар 2",
-						fieldType: "String"
-					}
-				}, {
-					about: {
-						value: "Товар 2",
-						fieldType: "Text"
-					},
-					active: {
-						value: true,
-						fieldType: "Boolean"
-					},
-					id: {
-						value: "1", fieldType: "Integer"
-					},
-					imageUrl: {
-						value: "/data/images/card2.jpg",
-						fieldType: "Media"
-					},
-					title: {
-						value: "Крутой товар 2",
-						fieldType: "String"
-					}
-				}, {
-					about: {
-						value: "Товар 2",
-						fieldType: "Text"
-					},
-					active: {
-						value: false,
-						fieldType: "Boolean"
-					},
-					id: {
-						value: "1", fieldType: "Integer"
-					},
-					imageUrl: {
-						value: "/data/images/card2.jpg",
-						fieldType: "Media"
-					},
-					title: {
-						value: "Крутой товар 2",
-						fieldType: "String"
-					}
-				}]);
-
-				this.test = function () {
-					console.log(this.names());
-				};
-			}
-
-			ko.applyBindings(new TestViewModel());
 		}
 	}, {
 		key: 'destroy',
@@ -680,7 +608,7 @@ $$.Model.Index = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '<h1>Index</h1>\n\t\t<div data-bind="foreach: names">\n\t\t\t<div class="row" data-bind="tableTypes: $data"></div>\n\t\t</div>\n\t\t<button data-bind="click: test">test</button>\n\t\t';
+			this.template = '<h1>Index</h1>';
 		}
 	}]);
 
@@ -768,7 +696,6 @@ $$.Model.Table = (function () {
 			Media: faker.image.technics //({min: 150,max: 200})
 		};
 
-		this._template();
 		this.initialize();
 	}
 
@@ -786,9 +713,15 @@ $$.Model.Table = (function () {
 			this.getTable().then(function (response) {
 				response = $.parseJSON(response);
 
-				_this3.root.html(_this3.template);
-				_this3.createTable(response.data);
-				_this3.tableSettings();
+				_this3._createBindingHelpers();
+
+				if (response.success) {
+					_this3._template(_.size(response.data[0]) + 1);
+					_this3.root.html(_this3.template);
+					_this3.createTable(response.data);
+				} else {
+					_this3.tableSettings();
+				}
 			});
 		}
 	}, {
@@ -799,186 +732,85 @@ $$.Model.Table = (function () {
 		}
 	}, {
 		key: '_template',
-		value: function _template() {
+		value: function _template(colspan) {
 			"use strict";
 
-			this.settings = '\n\t\t<div id="modal_1" class="modal">\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: updateTable">\n\t\t\t\t<div class="modal-content">\n\t\t\t\t    <h4>Настройка таблицы</h4>\n\t\t\t\t\t<div class="container" data-bind="foreach: settingsModel">\n\t\t\t\t\t\t<div class="row">\n\t\t\t\t\t\t\t<div class="col s12" data-bind="initSettings: $data"></div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div class="modal-footer">\n\t\t\t\t\t<button type="submit" class="waves-effect waves-green btn-flat">Сохранить</button>\n\t\t\t\t\t<a class="waves-effect waves-green btn-flat" data-bind="click: addField">Добавить поле</a>\n\t\t\t\t</div>\n\t\t\t</form>\n\t \t</div>';
+			this.form = '\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable" class="ui form">\n\t\t\t\t\t<table class="ui celled table">\n\t\t\t        <thead>\n\t\t\t        <tr data-bind="keysName: rows()"></tr>\n\t\t\t        </thead>\n\t\t\t        <tbody data-bind="foreach: rows">\n\t\t\t\t\t\t<tr data-bind="tableData: $data"></tr>\n\t                </tbody>\n\t\t\t        <tfoot>\n\t\t\t        <tr>\n\t\t\t            <th colspan="' + colspan + '">\n\t\t\t\t\t\t\t<div class="ui buttons right floated">\n\t\t\t\t\t\t\t\t<button class="ui button" data-bind=\'click: addRow\'>Добавить</button>\n\t\t\t\t\t\t\t\t<div class="or"></div>\n\t\t\t\t\t\t\t\t<button class="ui positive button" type="submit" data-bind=\'enable: rows().length > 0\'>Сохранить</button>\n\t\t\t\t\t\t\t</div>\n\t\t\t            </th>\n\t\t\t        </tr>\n\t\t\t        </tfoot>\n\t\t\t    </table>\n\t\t    </form>';
 
-			this.form = '\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable">\n\t\t\t\t<table></table>\n\t\t\t\t<div class="fixed-action-btn" style="bottom: 45px; right: 24px;">\n\t\t\t\t    <a class="btn-floating btn-large red">\n\t\t\t\t      <i class="large material-icons">menu</i>\n\t\t\t\t    </a>\n\t\t\t\t    <ul>\n\t\t\t\t      <li>\n\t\t\t\t      <button type="submit" class="btn-floating red"><i class="material-icons">insert_chart</i></button>\n\t\t\t\t      </li>\n\t\t\t\t      <li><a class="btn-floating yellow darken-1" data-bind="click: addRandomRecord"><i class="material-icons">add</i></a></li>\n\t\t\t\t      <li><a class="btn-floating green" data-bind="click: addRecord"><i class="material-icons">add</i></a></li>\n\t\t\t\t    </ul>\n\t\t\t\t  </div>\n\t\t\t</form>';
-
-			this.template = '\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<h1>' + this.options.tableName + '</h1>\n\t\t\t\t\t\t<a class="btn-floating indigo darken-4 right" data-bind="click: openSettings"><i class="material-icons">settings</i></a>\n\t\t\t\t\t\t' + this.form + '\n\t\t\t\t\t\t' + this.settings + '\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
+			this.template = '\n\t\t\t\t\t\t<div class="messages"></div>\n\t\t\t\t\t\t<h1>' + this.options.tableName + '</h1>\n\t\t\t\t\t\t' + this.form;
 		}
 	}, {
 		key: 'createTable',
 		value: function createTable(response) {
 			"use strict";
-			var names = '';
 			var _this = this;
 
-			this.root.find('table').html('\n\t\t\t\t\t\t\t<thead>\n\t\t\t\t\t\t\t\t<tr data-bind="insertKey: keys"></tr>\n\t\t\t\t\t\t\t</thead>\n\t\t\t\t\t\t\t<tbody data-bind="foreach: fields">\n\t\t \t\t\t\t\t\t<tr data-bind="tableTypes: $data"></tr>\n\t\t\t\t\t\t\t </tbody>\n\t\t\t\t\t\t\t');
+			var TableModel = function TableModel(rows) {
+				var self = this;
 
-			ko.bindingHandlers.tableTypes = {
-				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
-					_.each(valueAccessor(), function (object, key) {
-						var field = new $$.FieldType[object.fieldType]({
-							bindKey: key,
-							column: 's12'
-						});
+				self.rows = ko.observableArray(ko.utils.arrayMap(rows, function (row) {
+					var rowModel = {};
 
-						$(element).append('<td>' + field.template + '</td>');
+					_.each(row, function (object, key) {
+						rowModel[key] = object;
 					});
 
-					$(element).append('<td><a href="#"><i class="material-icons" data-bind="click: $parent.deleteRecord">delete</i></a></td>');
-				},
-				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
-			};
+					return rowModel;
+				}));
 
-			ko.bindingHandlers.initSettings = {
-				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
-					//console.log(element);
-					//console.log(valueAccessor());
+				var model = rows[0];
 
-					var field = '';
+				self.addRow = function () {
+					var emptyModel = {};
 
-					_.each(valueAccessor(), function (object, key) {
-						if (key === 'chosenType' || key === 'types') {
-							if (key === 'chosenType') {}
+					_.each(model, function (object, key) {
+						emptyModel[key] = {};
+						emptyModel[key].value = object.value;
+						emptyModel[key].fieldType = object.fieldType;
+
+						if (object.fieldType === 'Boolean') {
+							emptyModel[key].value = false;
 						} else {
-							field += '\n\t\t\t\t\t\t\t\t<div class="row">\n\t\t\t\t\t\t\t\t\t<div class="input-field col s6">\n\t\t\t\t\t\t\t\t\t\t<input placeholder="Название поля" id="field_name_$index" data-bind="value: ' + key + '.fieldType" type="text" class="validate">\n\t\t\t\t\t\t\t\t\t\t<label class="active" for="field_name_$index">Название поля</label>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t\t<div class="input-field col s6">\n\t\t\t\t\t\t\t\t\t\t<select data-bind="options: ' + valueAccessor().types + ', selectedOptions: ' + valueAccessor().chosenType + '"></select>\n\t\t\t\t\t\t\t\t\t\t<label>Тип поля</label>\n\t\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t</div>';
+							emptyModel[key].value = '';
 						}
 					});
 
-					$(element).append(field);
-				},
-				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
-			};
+					self.rows.push(emptyModel);
+				};
 
-			ko.bindingHandlers.insertKey = {
-				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
-					var keys = valueAccessor();
-					_.each(keys()[0], function (object, key) {
-						$(element).append('<th>' + key + '</th>');
-					});
-				},
-				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
-			};
-
-			function ReservationsViewModel(response) {
-				var self = this;
-
-				this.fields = ko.observableArray(response);
-				this.keys = ko.observableArray([this.fields()[0]]);
-				this.types = ko.observableArray(_this.fieldsType);
-
-				_.each(response[0], function (object, key) {
-					_this.model[key] = {
-						value: '',
-						fieldType: object.fieldType
-					};
-				});
-
-				this.settingsModel = ko.observableArray([_this.model]);
-				this.settingsModel()[0].types = _this.fieldsType;
-				this.settingsModel()[0].chosenType = ko.observableArray([_this.fieldsType[0]]);
-
-				/*response.forEach(record => {
-    	this.fields.push(record);
-    });*/
-
-				self.openSettings = function () {
-					$('#modal_1').openModal();
+				self.removeRow = function (contact) {
+					self.rows.remove(contact);
 				};
 
 				self.saveTable = function () {
+					//self.lastSavedJson(JSON.stringify(ko.toJS(self.rows), null, 2));
 					$.ajax({
 						type: 'POST',
 						url: 'core/TableSave.php',
 						data: {
 							tableName: _this.options.tableName,
-							data: ko.toJSON(self.fields)
+							data: ko.toJSON(self.rows)
 						},
 						success: function success(response) {
 							response = $.parseJSON(response);
 
 							if (response.success) {
-								Materialize.toast('Таблица успешно обновлена', 2000, 'green accent-4');
+								$('body').trigger('showMessage', {
+									type: 'success',
+									message: 'Таблица успешно сохранена'
+								});
 							} else {
-								Materialize.toast('Ошибка при сохранении', 2000, 'red accent-4');
+								$('body').trigger('showMessage', {
+									type: 'error',
+									message: 'Ошибка при сохранении'
+								});
 							}
 						}
 					});
 				};
+			};
 
-				self.addRandomRecord = function () {
-					_.each(_this.model, function (object, key) {
-						if (object.fieldType === 'Text') {
-							object.value = _this.fakerObject[object.fieldType](5);
-						} else {
-							object.value = _this.fakerObject[object.fieldType]();
-						}
-					});
-
-					this.fields.push(_this.model);
-				};
-
-				self.addRecord = function () {
-					_.each(_this.model, function (object, key) {
-						object.value = "";
-					});
-
-					this.fields.push(_this.model);
-				};
-
-				self.deleteRecord = function () {
-					self.fields.remove(this);
-				};
-
-				this.updateTable = function () {
-
-					/*var json = $.parseJSON(ko.toJSON(self.fields));
-     		 json.forEach(field => {
-      _this.model[field.name] = {
-      value: '',
-      fieldType: field.chosenType[0]
-      };
-      });
-     		 $.ajax({
-      type: 'POST',
-      url: 'core/TableSave.php',
-      data: {
-      tableName: _this.options.tableName,
-      data: ko.toJSON([_this.model])
-      },
-      success: (response) => {
-      response = $.parseJSON(response);
-     		 if (response.success) {
-      Materialize.toast('Таблица успешно создана', 2000, 'green accent-4');
-     		 setTimeout(() => {
-      location.reload()
-      }, 200);
-      } else {
-      Materialize.toast('Ошибка при создании', 2000, 'red accent-4');
-      }
-      }
-      });*/
-				};
-
-				this.addField = function () {
-					this.fields.push({
-						name: '',
-						types: ko.observableArray(fieldsType),
-						chosenType: ko.observableArray(['NULL'])
-					});
-
-					$('select').material_select();
-				};
-
-				this.removeField = function () {
-					self.names.remove(this);
-				};
-			}
-
-			ko.applyBindings(new ReservationsViewModel(response));
+			ko.applyBindings(new TableModel(response));
 		}
 	}, {
 		key: 'getTable',
@@ -994,9 +826,116 @@ $$.Model.Table = (function () {
 			});
 		}
 	}, {
+		key: '_createBindingHelpers',
+		value: function _createBindingHelpers() {
+			"use strict";
+
+			ko.bindingHandlers.tableData = {
+				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+					_.each(valueAccessor(), function (object, key) {
+						if (_.isUndefined($$.FieldType[object.fieldType])) {
+							console.log(object);
+						}
+
+						var field = new $$.FieldType[object.fieldType]({
+							bindKey: key,
+							column: 's12'
+						});
+
+						$(element).append('<td>' + field.template + '</td>');
+
+						if (object.fieldType === 'Boolean') {
+							$(element).find('.ui.checkbox').checkbox();
+
+							$(element).find('input').on('change', function (event) {
+								object.value = $(this).prop('checked');
+							});
+						}
+					});
+
+					$(element).append('<td class="center aligned"><a href=\'#\' data-bind=\'click: $root.removeRow\'><i class="trash icon"></i></a></td>');
+				},
+				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
+			};
+
+			ko.bindingHandlers.keysName = {
+				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+					_.each(valueAccessor()[0], function (object, key) {
+						$(element).append('<th>' + key + '</th>');
+					});
+
+					$(element).append('<th class="center aligned"><i class="trash icon"></i></th>');
+				},
+				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
+			};
+		}
+	}, {
 		key: 'tableSettings',
 		value: function tableSettings() {
 			"use strict";
+			var template = '\n\t\t\t<div class="ui modal">\n\t\t\t\t<div class="header">Header</div>\n\t\t\t\t<div class="content">\n\t\t\t\t\t<form action="core/TableSave.php" method="POST" class="ui form" data-bind="submit: saveTable">\n\t\t\t\t\t\t<div class="field" data-bind="foreach: { data: tableKeys, as: \'tableKey\' }">\n\t\t\t\t\t\t\t<label>Название поля</label>\n\t\t\t\t\t\t\t<div class="two fields">\n\t\t\t\t\t\t\t\t<div class="field">\n\t\t\t\t\t\t\t\t\t<input type="text" data-bind="value: tableKey.key" placeholder="Название поля">\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="field">\n\t\t\t\t\t\t\t\t\t<select class="ui dropdown" data-bind="options: $root.types, selectedOptions: tableKey.fieldType"></select>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="ui buttons right floated">\n\t\t\t\t\t\t\t<button class="ui button" data-bind=\'click: addRow\'>Добавить</button>\n\t\t\t\t\t\t\t<div class="or"></div>\n\t\t\t\t\t\t\t<button class="ui positive button" type="submit" data-bind=\'enable: tableKeys().length > 0\'>Сохранить</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t</form>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t';
+			this.root.html(template);
+
+			$('.ui.modal').modal('show');
+
+			var _this = this;
+
+			var TableModel = function TableModel() {
+				var self = this;
+
+				self.types = ko.observableArray(_this.fieldsType);
+				self.tableKeys = ko.observableArray([]);
+
+				self.addRow = function () {
+					self.tableKeys.push({
+						key: '',
+						fieldType: ko.observableArray(['Boolean'])
+					});
+				};
+
+				self.removeRow = function (key) {
+					self.tableKeys.remove(key);
+				};
+
+				self.saveTable = function () {
+					var model = {};
+
+					self.tableKeys().forEach(function (key) {
+						model[key.key] = {
+							value: '',
+							fieldType: key.fieldType()[0]
+						};
+					});
+
+					$.ajax({
+						type: 'POST',
+						url: 'core/TableSave.php',
+						data: {
+							tableName: _this.options.tableName,
+							data: ko.toJSON([model])
+						},
+						success: function success(response) {
+							response = $.parseJSON(response);
+
+							if (response.success) {
+								$('body').trigger('showMessage', {
+									type: 'success',
+									message: 'Таблица успешно сохранена'
+								});
+
+								location.reload(true);
+							} else {
+								$('body').trigger('showMessage', {
+									type: 'error',
+									message: 'Ошибка при сохранении'
+								});
+							}
+						}
+					});
+				};
+			};
+
+			ko.applyBindings(new TableModel());
 		}
 	}]);
 
@@ -1043,7 +982,7 @@ $$.Model.Tables = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '\n\t\t\t<div class="container">\n\t\t\t\t<div class="row">\n\t\t\t\t\t<div class="col s12">\n\t\t\t\t\t\t<h1>Tables</h1>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div>';
+			this.template = '\n\t\t\t<div class="ui grid container">\n\t\t\t\t<div class="column row">\n\t\t\t\t\t<h1>Tables</h1>\n\t\t\t\t</div>\n\t\t\t\t<div class="column row two">\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t';
 		}
 	}, {
 		key: 'getTables',
@@ -1057,15 +996,14 @@ $$.Model.Tables = (function () {
 				url: 'core/Tables.php',
 				success: function success(response) {
 					response = $.parseJSON(response);
-					console.log(response);
 
-					var list = $('<ul class="collection with-header"></ul>').appendTo(_this.root.find('.s12'));
+					var list = $('<div class="ui items column">').appendTo(_this.root.find('.row.two'));
 
 					response.forEach(function (table) {
-						list.append('<a href="tables/' + table + '" class="collection-item">' + table + '</a>');
+						list.append('<a href="tables/' + table + '" class="item">' + table + '</a>');
 					});
 
-					list.append('<li class="collection-item">\n\t\t\t\t\t<div class="input-field col s4">\n\t\t\t\t\t\t<input placeholder="Название таблицы" id="create_table" type="text" class="validate">\n\t\t\t\t\t    <label for="create_table">Название таблицы</label>\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="input-field col s1 right">\n\t\t\t\t\t\t<a href="#" class="waves-effect waves-green btn js-create-table"><i class="material-icons">add</i></a>\n\t\t\t\t\t</div>\n\t\t\t\t</li>');
+					list.append('\n\n\t\t\t\t<div class="item ui form grid">\n\t\t\t\t\t<div class="field four wide column">\n\t\t\t\t\t<label for="create_table">Название таблицы</label>\n\t\t\t\t\t\t<input placeholder="Название таблицы" id="create_table" type="text" class="validate">\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="field four wide column right floated">\n\t\t\t\t\t\t<div class="ui animated fade button js-create-table" tabindex="0">\n\t\t\t\t\t\t\t<div class="visible content">Создать</div>\n\t\t\t\t\t\t\t<div class="hidden content">\n\t\t\t\t\t\t\t\t<i class="icon add Circle"></i>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>');
 				}
 			});
 
@@ -1075,6 +1013,10 @@ $$.Model.Tables = (function () {
 				var tableName = $('#create_table').val();
 
 				if (tableName === '') {
+					$('body').trigger('showMessage', {
+						type: 'error',
+						message: 'Название таблицы не должно быть пустым'
+					});
 					return;
 				}
 
@@ -1088,9 +1030,17 @@ $$.Model.Tables = (function () {
 						response = $.parseJSON(response);
 
 						if (response.success) {
-							Materialize.toast('Таблица успешно создана', 2000, 'green accent-4');
+							$('body').trigger('showMessage', {
+								type: 'success',
+								message: 'Таблица успешно создана'
+							});
+
+							$('.item.ui.form.grid').before('<a href="tables/' + tableName + '" class="item">' + tableName + '</a>');
 						} else {
-							Materialize.toast('Ошибка при создании', 2000, 'red accent-4');
+							$('body').trigger('showMessage', {
+								type: 'error',
+								message: 'Ошибка при создании'
+							});
 						}
 					}
 				});
@@ -1116,7 +1066,7 @@ $$.FieldType.Boolean = (function () {
 			column: 's12',
 			label: 'Integer',
 			bindKey: '',
-			uniqueId: _.uniqueId('prefix_')
+			uniqueId: _.uniqueId('boolean_')
 		};
 
 		_.assign(this.options, options);
@@ -1128,7 +1078,7 @@ $$.FieldType.Boolean = (function () {
 		value: function _template() {
 			"use strict";
 			//col ${this.options.column}
-			this.template = '\n\t\t\t<div class="input-field switch">\n\t\t\t    <label for="' + this.options.uniqueId + '">\n\t\t\t      Off\n\t\t\t      <input type="checkbox" id="' + this.options.uniqueId + '" data-bind="checked: ' + this.options.bindKey + '.value">\n\t\t\t      <span class="lever"></span>\n\t\t\t      On\n\t\t\t    </label>\n\t\t    </div>';
+			this.template = '\n\t\t\t\t<div class="field center aligned">\n\t\t\t\t\t<div class="ui toggle checkbox">\n\t\t\t\t\t\t<input type="checkbox" id="' + this.options.uniqueId + '" data-bind="checked: ' + this.options.bindKey + '.value" tabindex="0" class="hidden">\n\t\t\t\t\t</div>\n\t\t\t\t</div>';
 		}
 	}]);
 
@@ -1150,7 +1100,7 @@ $$.FieldType.Integer = (function () {
 			column: 's12',
 			label: 'Integer',
 			bindKey: '',
-			uniqueId: _.uniqueId('prefix_')
+			uniqueId: _.uniqueId('integer_')
 		};
 
 		_.assign(this.options, options);
@@ -1162,8 +1112,7 @@ $$.FieldType.Integer = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			//col ${this.options.column}
-			this.template = '\n\t\t\t<div class="input-field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			this.template = '\n\t\t\t<div class="field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="number" data-bind="value: ' + this.options.bindKey + '.value">\n\t        </div>';
 		}
 	}]);
 
@@ -1185,7 +1134,7 @@ $$.FieldType.Media = (function () {
 			column: 's12',
 			label: 'Media',
 			bindKey: '',
-			uniqueId: _.uniqueId('prefix_')
+			uniqueId: _.uniqueId('media_')
 		};
 
 		_.assign(this.options, options);
@@ -1200,7 +1149,7 @@ $$.FieldType.Media = (function () {
 
 			var id = _.uniqueId('input_');
 			//col ${this.options.column}
-			this.template = '\n\t\t\t<div class="input-field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			this.template = '\n\t\t\t<div class="field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t        </div>';
 		}
 	}]);
 
@@ -1222,7 +1171,7 @@ $$.FieldType.String = (function () {
 			column: 's12',
 			label: 'String',
 			bindKey: '',
-			uniqueId: _.uniqueId('prefix_')
+			uniqueId: _.uniqueId('string_')
 		};
 
 		_.assign(this.options, options);
@@ -1237,7 +1186,7 @@ $$.FieldType.String = (function () {
 
 			var id = _.uniqueId('input_');
 			//col ${this.options.column}
-			this.template = '\n\t\t\t<div class="input-field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
+			this.template = '\n\t\t\t<div class="field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t        </div>';
 		}
 	}]);
 
@@ -1259,7 +1208,7 @@ $$.FieldType.Text = (function () {
 			column: 's12',
 			label: 'Textarea',
 			bindKey: '',
-			uniqueId: _.uniqueId('prefix_')
+			uniqueId: _.uniqueId('text_')
 		};
 
 		_.assign(this.options, options);
@@ -1271,14 +1220,7 @@ $$.FieldType.Text = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-
-			var id = _.uniqueId('textarea_');
-			//col ${this.options.column}
-			this.template = '\n\t\t\t<div class="input-field">\n\t          <textarea id="' + this.options.uniqueId + '" class="materialize-textarea" data-bind="value: ' + this.options.bindKey + '.value, uniqueName: true"></textarea>\n\t          <label class="active" for="' + this.options.uniqueId + '">' + this.options.label + '</label>\n\t        </div>\n\t\t';
-
-			/*$(`#${id}`).on('change', function () {
-    $(this).trigger('autoresize');
-    });*/
+			this.template = '\n\t\t\t<div class="field">\n\t          <textarea id="' + this.options.uniqueId + '" data-bind="value: ' + this.options.bindKey + '.value, uniqueName: true" rows="1"></textarea>\n\t        </div>';
 		}
 	}]);
 
@@ -1320,7 +1262,7 @@ $$.Component.Menu = (function () {
 		value: function _template() {
 			"use strict";
 
-			this.template = $("\n\t\t\t<nav>\n\t\t        <div class=\"nav-wrapper\">\n\t\t\t      <a href=\"/admin\" class=\"brand-logo\">Admin</a>\n\t\t\t      <ul id=\"nav-mobile\" class=\"right hide-on-med-and-down\">\n\t\t\t        <li><a href=\"tables\">Tables</a></li>\n\t\t\t        <li><a href=\"/\" target=\"_blank\">На сайт</a></li>\n\t\t\t      </ul>\n\t\t\t    </div>\n\t\t    </nav>");
+			this.template = $("\n\t\t\t<div class=\"ui attached stackable menu\">\n\t\t\t  <div class=\"ui container\">\n\t\t\t    <a href=\"/admin/\" class=\"item\">\n\t\t\t      <i class=\"home icon\"></i> Главная\n\t\t\t    </a>\n\t\t\t    <a href=\"tables\" class=\"item\">\n\t\t\t      <i class=\"grid layout icon\"></i> Таблицы\n\t\t\t    </a>\n\t\t\t    <div class=\"right item\">\n\t\t\t      <div class=\"ui\"><a href=\"/\" target=\"_blank\">На сайт</a></div>\n\t\t\t    </div>\n\t\t\t  </div>\n\t\t\t</div>");
 		}
 	}, {
 		key: "updateMenu",
@@ -1417,7 +1359,6 @@ $$.Component.Route = (function () {
 
 			page('/', function (options) {
 				"use strict";
-				options.path = '/index';
 				_this._initModel(options);
 			});
 
@@ -1449,7 +1390,11 @@ $$.Component.Route = (function () {
 
 			var pathname = options.path.split('/')[1];
 
-			var modelName = pathname.charAt(0).toUpperCase() + pathname.substr(1);
+			if (pathname === '') {
+				var modelName = 'Index';
+			} else {
+				var modelName = pathname.charAt(0).toUpperCase() + pathname.substr(1);
+			}
 
 			if (_.size(options.params)) {
 				modelName = modelName.slice(0, -1);
@@ -1626,18 +1571,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $$ = $$ || {};
 
-/**
- * Создать типы полей
- *
- * integer
- * string
- * boolean
- * text
- * image
- *
- * @type {Application}
- */
-
 $$.Application = (function () {
 	function Application() {
 		_classCallCheck(this, Application);
@@ -1655,7 +1588,9 @@ $$.Application = (function () {
 	_createClass(Application, [{
 		key: '_cacheNodes',
 		value: function _cacheNodes() {
-			this.nodes = {};
+			this.nodes = {
+				messages: this.root.find('.g-messages')
+			};
 		}
 
 		/**
@@ -1674,7 +1609,29 @@ $$.Application = (function () {
 		}
 	}, {
 		key: '_initialize',
-		value: function _initialize() {}
+		value: function _initialize() {
+			var _this = this;
+
+			var messages = function messages(text) {
+				return {
+					success: '\n\t\t\t\t<div class="ui positive message">\n\t\t\t\t\t<i class="close icon"></i>\n\t\t\t\t\t<div class="header">\n\t\t\t\t\t\t' + text + '\n\t\t\t\t\t</div>\n\t\t\t\t</div>',
+					error: '\n\t\t\t\t<div class="ui negative  message">\n\t\t\t\t\t<i class="close icon"></i>\n\t\t\t\t\t<div class="header">\n\t\t\t\t\t\t' + text + '\n\t\t\t\t\t</div>\n\t\t\t\t</div>'
+				};
+			};
+
+			this.root.on('showMessage', function (event, data) {
+				"use strict";
+				$(messages[data.type]);
+
+				var message = $(messages(data.message)[data.type]).appendTo(_this.nodes.messages);
+
+				setTimeout(function () {
+					message.slideUp(400, function () {
+						message.remove();
+					});
+				}, 2000);
+			});
+		}
 	}]);
 
 	return Application;

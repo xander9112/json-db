@@ -26,13 +26,14 @@ $$.Model.Tables = class ModelTables {
 	_template () {
 		"use strict";
 		this.template = `
-			<div class="container">
-				<div class="row">
-					<div class="col s12">
-						<h1>Tables</h1>
-					</div>
+			<div class="ui grid container">
+				<div class="column row">
+					<h1>Tables</h1>
 				</div>
-			</div>`;
+				<div class="column row two">
+				</div>
+			</div>
+			`;
 	}
 
 	getTables () {
@@ -43,23 +44,29 @@ $$.Model.Tables = class ModelTables {
 			url: 'core/Tables.php',
 			success: (response) => {
 				response = $.parseJSON(response);
-				console.log(response);
 
-				var list = $('<ul class="collection with-header"></ul>').appendTo(this.root.find('.s12'));
+				var list = $('<div class="ui items column">').appendTo(this.root.find('.row.two'));
 
 				response.forEach(table => {
-					list.append(`<a href="tables/${table}" class="collection-item">${table}</a>`);
+					list.append(`<a href="tables/${table}" class="item">${table}</a>`);
 				});
 
-				list.append(`<li class="collection-item">
-					<div class="input-field col s4">
+				list.append(`
+
+				<div class="item ui form grid">
+					<div class="field four wide column">
+					<label for="create_table">Название таблицы</label>
 						<input placeholder="Название таблицы" id="create_table" type="text" class="validate">
-					    <label for="create_table">Название таблицы</label>
 					</div>
-					<div class="input-field col s1 right">
-						<a href="#" class="waves-effect waves-green btn js-create-table"><i class="material-icons">add</i></a>
+					<div class="field four wide column right floated">
+						<div class="ui animated fade button js-create-table" tabindex="0">
+							<div class="visible content">Создать</div>
+							<div class="hidden content">
+								<i class="icon add Circle"></i>
+							</div>
+						</div>
 					</div>
-				</li>`);
+				</div>`);
 			}
 		});
 
@@ -70,6 +77,10 @@ $$.Model.Tables = class ModelTables {
 			var tableName = $('#create_table').val();
 
 			if (tableName === '') {
+				$('body').trigger('showMessage', {
+					type: 'error',
+					message: 'Название таблицы не должно быть пустым'
+				});
 				return;
 			}
 
@@ -83,9 +94,18 @@ $$.Model.Tables = class ModelTables {
 					response = $.parseJSON(response);
 
 					if (response.success) {
-						Materialize.toast('Таблица успешно создана', 2000, 'green accent-4');
+						$('body').trigger('showMessage', {
+							type: 'success',
+							message: 'Таблица успешно создана'
+						});
+
+						$('.item.ui.form.grid').before(`<a href="tables/${tableName}" class="item">${tableName}</a>`);
+
 					} else {
-						Materialize.toast('Ошибка при создании', 2000, 'red accent-4');
+						$('body').trigger('showMessage', {
+							type: 'error',
+							message: 'Ошибка при создании'
+						});
 					}
 				}
 			});

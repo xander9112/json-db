@@ -1,18 +1,5 @@
 var $$ = $$ || {};
 
-/**
- * Создать типы полей
- *
- * integer
- * string
- * boolean
- * text
- * image
- *
- * @type {Application}
- */
-
-
 $$.Application = class Application {
 	constructor () {
 		this.currentPage = undefined;
@@ -26,7 +13,9 @@ $$.Application = class Application {
 	}
 
 	_cacheNodes () {
-		this.nodes = {};
+		this.nodes = {
+			messages: this.root.find('.g-messages')
+		};
 	}
 
 	/**
@@ -43,7 +32,38 @@ $$.Application = class Application {
 	}
 
 	_initialize () {
+		var messages = function (text) {
+			return {
+				success: `
+				<div class="ui positive message">
+					<i class="close icon"></i>
+					<div class="header">
+						${text}
+					</div>
+				</div>`,
+				error: `
+				<div class="ui negative  message">
+					<i class="close icon"></i>
+					<div class="header">
+						${text}
+					</div>
+				</div>`
+			};
+		};
 
+		this.root.on('showMessage', (event, data) => {
+			"use strict";
+			$(messages[data.type]);
+
+			var message = $(messages(data.message)[data.type]).appendTo(this.nodes.messages);
+
+			setTimeout(() => {
+				message.slideUp(400, () => {
+					message.remove();
+				});
+			}, 2000);
+
+		});
 	}
 };
 

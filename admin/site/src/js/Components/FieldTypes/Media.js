@@ -4,7 +4,7 @@ $$.FieldType.Media = class FieldTypeMedia {
 			column: 's12',
 			label: 'Media',
 			bindKey: '',
-			uniqueId: _.uniqueId('prefix_')
+			uniqueId: _.uniqueId('media_')
 		};
 
 		_.assign(this.options, options);
@@ -18,10 +18,8 @@ $$.FieldType.Media = class FieldTypeMedia {
 		var id = _.uniqueId('input_');
 		//col ${this.options.column}
 		this.template = `
-			<div class="input-field">
+			<div class="field">
 	          <input placeholder="Placeholder" id="${this.options.uniqueId}" type="text" data-bind="value: ${this.options.bindKey}.value">
-	          <label class="active" for="${this.options.uniqueId}">${this.options.label}</label>
-	        </div>
-		`;
+	        </div>`;
 	}
 };

@@ -18,7 +18,6 @@ $$.Component.Route = class Route {
 
 		page('/', (options) => {
 			"use strict";
-			options.path = '/index';
 			this._initModel(options);
 		});
 
@@ -49,12 +48,15 @@ $$.Component.Route = class Route {
 
 		var pathname = options.path.split('/')[1];
 
-		var modelName = pathname.charAt(0).toUpperCase() + pathname.substr(1);
+		if (pathname === '') {
+			var modelName = 'Index';
+		} else {
+			var modelName = pathname.charAt(0).toUpperCase() + pathname.substr(1);
+		}
 
 		if (_.size(options.params)) {
 			modelName = modelName.slice(0, -1);
 		}
-
 
 
 		if (this.currentModel) {

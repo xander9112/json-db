@@ -21,15 +21,19 @@ $$.Component.Menu = class ComponentMenu {
 		"use strict";
 
 		this.template = $(`
-			<nav>
-		        <div class="nav-wrapper">
-			      <a href="/admin" class="brand-logo">Admin</a>
-			      <ul id="nav-mobile" class="right hide-on-med-and-down">
-			        <li><a href="tables">Tables</a></li>
-			        <li><a href="/" target="_blank">На сайт</a></li>
-			      </ul>
+			<div class="ui attached stackable menu">
+			  <div class="ui container">
+			    <a href="/admin/" class="item">
+			      <i class="home icon"></i> Главная
+			    </a>
+			    <a href="tables" class="item">
+			      <i class="grid layout icon"></i> Таблицы
+			    </a>
+			    <div class="right item">
+			      <div class="ui"><a href="/" target="_blank">На сайт</a></div>
 			    </div>
-		    </nav>`);
+			  </div>
+			</div>`);
 	}
 
 	set currentItem (url) {
