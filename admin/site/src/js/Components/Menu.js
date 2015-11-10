@@ -29,8 +29,13 @@ $$.Component.Menu = class ComponentMenu {
 			    <a href="tables" class="item">
 			      <i class="grid layout icon"></i> Таблицы
 			    </a>
+		        <a href="login" class="item">
+			        <i class="icon user"></i> Логин
+		        </a>
 			    <div class="right item">
-			      <div class="ui"><a href="/" target="_blank">На сайт</a></div>
+			      <div class="ui">
+			      <a href="/" target="_blank">На сайт</a>
+			      </div>
 			    </div>
 			  </div>
 			</div>`);

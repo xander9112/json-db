@@ -1,5 +1,20 @@
 var $$ = $$ || {};
 
+/**
+ *
+ * @type {ModelTable}
+ *
+ * [
+ * {
+ * key: '',
+ * value: '',
+ * fieldType: ''
+ * }
+ *
+ *
+ * ]
+ */
+
 $$.Model.Table = class ModelTable {
 	constructor (root = $('main'), options = {}) {
 		"use strict";
@@ -51,7 +66,17 @@ $$.Model.Table = class ModelTable {
 
 	destroy () {
 		"use strict";
-		console.log('destroy Index');
+		console.log('destroy Table');
+
+		this.root.find('[data-bind]').each(function () {
+			$(this).unbind();
+			ko.removeNode($(this)[0]);
+		});
+
+		this.root.html('');
+
+		delete this.root;
+
 	}
 
 	_template (colspan) {
@@ -72,7 +97,7 @@ $$.Model.Table = class ModelTable {
 							<div class="ui buttons right floated">
 								<button class="ui button" data-bind='click: addRow'>Добавить</button>
 								<div class="or"></div>
-								<button class="ui positive button" type="submit" data-bind='enable: rows().length > 0'>Сохранить</button>
+								<button class="ui positive button" type="submit">Сохранить</button>
 							</div>
 			            </th>
 			        </tr>
@@ -128,7 +153,6 @@ $$.Model.Table = class ModelTable {
 			};
 
 			self.saveTable = function () {
-				//self.lastSavedJson(JSON.stringify(ko.toJS(self.rows), null, 2));
 				$.ajax({
 					type: 'POST',
 					url: 'core/TableSave.php',
@@ -153,6 +177,59 @@ $$.Model.Table = class ModelTable {
 					}
 				});
 			};
+
+			self.openImageFolder = function (object, event) {
+				var target = $(event.currentTarget);
+				var fieldKey = target.siblings().data('bind').split(' ')[1].split('.')[0];
+				var currentObject = {};
+
+				self.rows().forEach(row => {
+					_.each(row, (object, key) => {
+
+						object.value = 'fasfas'
+
+						/*if (key === fieldKey) {
+						 //console.log(object.value, target.siblings().val());
+						 if (object.value === target.siblings().val()) {
+						 currentObject = object;
+						 }
+						 }*/
+
+					});
+				});
+			};
+
+			self.openTextEditor = function (object, event) {
+				_this.root.append(`
+<div class="ui modal text-editor">
+  <i class="close icon"></i>
+  <div class="header">
+    Profile Picture
+  </div>
+  <div class="image content">
+    <div class="ui medium image">
+      <img src="/images/avatar/large/chris.jpg">
+    </div>
+    <div class="description">
+      <div class="ui header">We've auto-chosen a profile image for you.</div>
+      <p>We've grabbed the following image from the <a href="https://www.gravatar.com" target="_blank">gravatar</a> image associated with your registered e-mail address.</p>
+      <p>Is it okay to use this photo?</p>
+    </div>
+  </div>
+  <div class="actions">
+    <div class="ui black deny button">
+      Nope
+    </div>
+    <div class="ui positive right labeled icon button">
+      Yep, that's me
+      <i class="checkmark icon"></i>
+    </div>
+  </div>
+</div>
+				`);
+
+				$('.ui.text-editor').modal('show');
+			}
 		};
 
 		ko.applyBindings(new TableModel(response));
@@ -199,6 +276,7 @@ $$.Model.Table = class ModelTable {
 				$(element).append(`<td class="center aligned"><a href='#' data-bind='click: $root.removeRow'><i class="trash icon"></i></a></td>`);
 			},
 			update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+				console.log(valueAccessor());
 			}
 		};
 
@@ -209,6 +287,30 @@ $$.Model.Table = class ModelTable {
 				});
 
 				$(element).append(`<th class="center aligned"><i class="trash icon"></i></th>`);
+			},
+			update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+			}
+		};
+
+		ko.bindingHandlers.validate = {
+			init: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
+				$(element).on('blur', (event) => {
+					var item = $(event.currentTarget);
+
+					item.parent().removeClass('error');
+					item.parent().removeClass('success');
+
+					if (item.val() === '') {
+						item.parent().addClass('error');
+					} else {
+						item.parent().addClass('success');
+					}
+				});
+				/*_.each(valueAccessor()[0], function (object, key) {
+				 $(element).append(`<th>${key}</th>`);
+				 });
+
+				 $(element).append(`<th class="center aligned"><i class="trash icon"></i></th>`);*/
 			},
 			update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
 			}
@@ -226,7 +328,7 @@ $$.Model.Table = class ModelTable {
 							<label>Название поля</label>
 							<div class="two fields">
 								<div class="field">
-									<input type="text" data-bind="value: tableKey.key" placeholder="Название поля">
+									<input type="text" data-bind="value: tableKey.key, validate: tableKey.key" placeholder="Название поля">
 								</div>
 								<div class="field">
 									<select class="ui dropdown" data-bind="options: $root.types, selectedOptions: tableKey.fieldType"></select>

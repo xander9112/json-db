@@ -19,7 +19,10 @@ $$.FieldType.Media = class FieldTypeMedia {
 		//col ${this.options.column}
 		this.template = `
 			<div class="field">
-	          <input placeholder="Placeholder" id="${this.options.uniqueId}" type="text" data-bind="value: ${this.options.bindKey}.value">
-	        </div>`;
+				<div class="ui icon input">
+					<input placeholder="Placeholder" id="${this.options.uniqueId}" type="text" data-bind="value: ${this.options.bindKey}.value">
+					<i class="inverted circular file image outline link icon" data-bind="click: $parent.openImageFolder"></i>
+				</div>
+			</div>`;
 	}
 };

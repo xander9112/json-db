@@ -622,6 +622,51 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var $$ = $$ || {};
 
+$$.Model.Login = (function () {
+	function ModelLogin() {
+		"use strict";
+
+		var root = arguments.length <= 0 || arguments[0] === undefined ? $('main') : arguments[0];
+
+		_classCallCheck(this, ModelLogin);
+
+		this.root = root === '' ? $('main') : root;
+
+		this._template();
+		this.initialize();
+	}
+
+	_createClass(ModelLogin, [{
+		key: 'initialize',
+		value: function initialize() {
+
+			"use strict";
+			this.root.html(this.template);
+		}
+	}, {
+		key: 'destroy',
+		value: function destroy() {
+			"use strict";
+			console.log('destroy Index');
+		}
+	}, {
+		key: '_template',
+		value: function _template() {
+			"use strict";
+			this.template = '\n\t\t\t<div class="b-login-page">\n\t\t\t<div class="ui middle aligned center aligned grid">\n\t\t\t<div class="column">\n\t\t\t<h2 class="ui teal image header">\n\t\t\t<img src="http://semantic-ui.com/examples/assets/images/logo.png" class="image">\n\t\t\t<div class="content">\n\t\t\tLog-in to your account\n\t\t\t</div>\n\t\t\t</h2>\n\t\t\t<form class="ui large form">\n\t\t\t<div class="ui stacked segment">\n\t\t\t<div class="field">\n\t\t\t<div class="ui left icon input">\n\t\t\t<i class="user icon"></i>\n\t\t\t<input type="text" name="email" placeholder="E-mail address">\n\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class="field">\n\t\t\t<div class="ui left icon input">\n\t\t\t<i class="lock icon"></i>\n\t\t\t<input type="password" name="password" placeholder="Password">\n\t\t\t</div>\n\t\t\t</div>\n\t\t\t<div class="ui fluid large teal submit button">Login</div>\n\t\t\t</div>\n\n\t\t\t<div class="ui error message"></div>\n\n\t\t\t</form>\n\t\t\t</div>\n\t\t\t</div>\n\t\t\t</div>\n\t\t';
+		}
+	}]);
+
+	return ModelLogin;
+})();;
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+var $$ = $$ || {};
+
 $$.Model.NotFound = (function () {
 	function ModelNotFound() {
 		"use strict";
@@ -665,6 +710,21 @@ var _createClass = (function () { function defineProperties(target, props) { for
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 var $$ = $$ || {};
+
+/**
+ *
+ * @type {ModelTable}
+ *
+ * [
+ * {
+ * key: '',
+ * value: '',
+ * fieldType: ''
+ * }
+ *
+ *
+ * ]
+ */
 
 $$.Model.Table = (function () {
 	function ModelTable() {
@@ -728,14 +788,23 @@ $$.Model.Table = (function () {
 		key: 'destroy',
 		value: function destroy() {
 			"use strict";
-			console.log('destroy Index');
+			console.log('destroy Table');
+
+			this.root.find('[data-bind]').each(function () {
+				$(this).unbind();
+				ko.removeNode($(this)[0]);
+			});
+
+			this.root.html('');
+
+			delete this.root;
 		}
 	}, {
 		key: '_template',
 		value: function _template(colspan) {
 			"use strict";
 
-			this.form = '\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable" class="ui form">\n\t\t\t\t\t<table class="ui celled table">\n\t\t\t        <thead>\n\t\t\t        <tr data-bind="keysName: rows()"></tr>\n\t\t\t        </thead>\n\t\t\t        <tbody data-bind="foreach: rows">\n\t\t\t\t\t\t<tr data-bind="tableData: $data"></tr>\n\t                </tbody>\n\t\t\t        <tfoot>\n\t\t\t        <tr>\n\t\t\t            <th colspan="' + colspan + '">\n\t\t\t\t\t\t\t<div class="ui buttons right floated">\n\t\t\t\t\t\t\t\t<button class="ui button" data-bind=\'click: addRow\'>Добавить</button>\n\t\t\t\t\t\t\t\t<div class="or"></div>\n\t\t\t\t\t\t\t\t<button class="ui positive button" type="submit" data-bind=\'enable: rows().length > 0\'>Сохранить</button>\n\t\t\t\t\t\t\t</div>\n\t\t\t            </th>\n\t\t\t        </tr>\n\t\t\t        </tfoot>\n\t\t\t    </table>\n\t\t    </form>';
+			this.form = '\n\t\t\t<form action="core/TableSave.php" method="POST" data-bind="submit: saveTable" class="ui form">\n\t\t\t\t\t<table class="ui celled table">\n\t\t\t        <thead>\n\t\t\t        <tr data-bind="keysName: rows()"></tr>\n\t\t\t        </thead>\n\t\t\t        <tbody data-bind="foreach: rows">\n\t\t\t\t\t\t<tr data-bind="tableData: $data"></tr>\n\t                </tbody>\n\t\t\t        <tfoot>\n\t\t\t        <tr>\n\t\t\t            <th colspan="' + colspan + '">\n\t\t\t\t\t\t\t<div class="ui buttons right floated">\n\t\t\t\t\t\t\t\t<button class="ui button" data-bind=\'click: addRow\'>Добавить</button>\n\t\t\t\t\t\t\t\t<div class="or"></div>\n\t\t\t\t\t\t\t\t<button class="ui positive button" type="submit">Сохранить</button>\n\t\t\t\t\t\t\t</div>\n\t\t\t            </th>\n\t\t\t        </tr>\n\t\t\t        </tfoot>\n\t\t\t    </table>\n\t\t    </form>';
 
 			this.template = '\n\t\t\t\t\t\t<div class="messages"></div>\n\t\t\t\t\t\t<h1>' + this.options.tableName + '</h1>\n\t\t\t\t\t\t' + this.form;
 		}
@@ -783,7 +852,6 @@ $$.Model.Table = (function () {
 				};
 
 				self.saveTable = function () {
-					//self.lastSavedJson(JSON.stringify(ko.toJS(self.rows), null, 2));
 					$.ajax({
 						type: 'POST',
 						url: 'core/TableSave.php',
@@ -807,6 +875,32 @@ $$.Model.Table = (function () {
 							}
 						}
 					});
+				};
+
+				self.openImageFolder = function (object, event) {
+					var target = $(event.currentTarget);
+					var fieldKey = target.siblings().data('bind').split(' ')[1].split('.')[0];
+					var currentObject = {};
+
+					self.rows().forEach(function (row) {
+						_.each(row, function (object, key) {
+
+							object.value = 'fasfas';
+
+							/*if (key === fieldKey) {
+        //console.log(object.value, target.siblings().val());
+        if (object.value === target.siblings().val()) {
+        currentObject = object;
+        }
+        }*/
+						});
+					});
+				};
+
+				self.openTextEditor = function (object, event) {
+					_this.root.append('\n<div class="ui modal text-editor">\n  <i class="close icon"></i>\n  <div class="header">\n    Profile Picture\n  </div>\n  <div class="image content">\n    <div class="ui medium image">\n      <img src="/images/avatar/large/chris.jpg">\n    </div>\n    <div class="description">\n      <div class="ui header">We\'ve auto-chosen a profile image for you.</div>\n      <p>We\'ve grabbed the following image from the <a href="https://www.gravatar.com" target="_blank">gravatar</a> image associated with your registered e-mail address.</p>\n      <p>Is it okay to use this photo?</p>\n    </div>\n  </div>\n  <div class="actions">\n    <div class="ui black deny button">\n      Nope\n    </div>\n    <div class="ui positive right labeled icon button">\n      Yep, that\'s me\n      <i class="checkmark icon"></i>\n    </div>\n  </div>\n</div>\n\t\t\t\t');
+
+					$('.ui.text-editor').modal('show');
 				};
 			};
 
@@ -855,7 +949,9 @@ $$.Model.Table = (function () {
 
 					$(element).append('<td class="center aligned"><a href=\'#\' data-bind=\'click: $root.removeRow\'><i class="trash icon"></i></a></td>');
 				},
-				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
+				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {
+					console.log(valueAccessor());
+				}
 			};
 
 			ko.bindingHandlers.keysName = {
@@ -868,12 +964,34 @@ $$.Model.Table = (function () {
 				},
 				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
 			};
+
+			ko.bindingHandlers.validate = {
+				init: function init(element, valueAccessor, allBindings, viewModel, bindingContext) {
+					$(element).on('blur', function (event) {
+						var item = $(event.currentTarget);
+
+						item.parent().removeClass('error');
+						item.parent().removeClass('success');
+
+						if (item.val() === '') {
+							item.parent().addClass('error');
+						} else {
+							item.parent().addClass('success');
+						}
+					});
+					/*_.each(valueAccessor()[0], function (object, key) {
+      $(element).append(`<th>${key}</th>`);
+      });
+     		 $(element).append(`<th class="center aligned"><i class="trash icon"></i></th>`);*/
+				},
+				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
+			};
 		}
 	}, {
 		key: 'tableSettings',
 		value: function tableSettings() {
 			"use strict";
-			var template = '\n\t\t\t<div class="ui modal">\n\t\t\t\t<div class="header">Header</div>\n\t\t\t\t<div class="content">\n\t\t\t\t\t<form action="core/TableSave.php" method="POST" class="ui form" data-bind="submit: saveTable">\n\t\t\t\t\t\t<div class="field" data-bind="foreach: { data: tableKeys, as: \'tableKey\' }">\n\t\t\t\t\t\t\t<label>Название поля</label>\n\t\t\t\t\t\t\t<div class="two fields">\n\t\t\t\t\t\t\t\t<div class="field">\n\t\t\t\t\t\t\t\t\t<input type="text" data-bind="value: tableKey.key" placeholder="Название поля">\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="field">\n\t\t\t\t\t\t\t\t\t<select class="ui dropdown" data-bind="options: $root.types, selectedOptions: tableKey.fieldType"></select>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="ui buttons right floated">\n\t\t\t\t\t\t\t<button class="ui button" data-bind=\'click: addRow\'>Добавить</button>\n\t\t\t\t\t\t\t<div class="or"></div>\n\t\t\t\t\t\t\t<button class="ui positive button" type="submit" data-bind=\'enable: tableKeys().length > 0\'>Сохранить</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t</form>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t';
+			var template = '\n\t\t\t<div class="ui modal">\n\t\t\t\t<div class="header">Header</div>\n\t\t\t\t<div class="content">\n\t\t\t\t\t<form action="core/TableSave.php" method="POST" class="ui form" data-bind="submit: saveTable">\n\t\t\t\t\t\t<div class="field" data-bind="foreach: { data: tableKeys, as: \'tableKey\' }">\n\t\t\t\t\t\t\t<label>Название поля</label>\n\t\t\t\t\t\t\t<div class="two fields">\n\t\t\t\t\t\t\t\t<div class="field">\n\t\t\t\t\t\t\t\t\t<input type="text" data-bind="value: tableKey.key, validate: tableKey.key" placeholder="Название поля">\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t\t<div class="field">\n\t\t\t\t\t\t\t\t\t<select class="ui dropdown" data-bind="options: $root.types, selectedOptions: tableKey.fieldType"></select>\n\t\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<div class="ui buttons right floated">\n\t\t\t\t\t\t\t<button class="ui button" data-bind=\'click: addRow\'>Добавить</button>\n\t\t\t\t\t\t\t<div class="or"></div>\n\t\t\t\t\t\t\t<button class="ui positive button" type="submit" data-bind=\'enable: tableKeys().length > 0\'>Сохранить</button>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t\t<br>\n\t\t\t\t\t</form>\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t';
 			this.root.html(template);
 
 			$('.ui.modal').modal('show');
@@ -976,13 +1094,22 @@ $$.Model.Tables = (function () {
 		key: 'destroy',
 		value: function destroy() {
 			"use strict";
-			console.log('destroy Index');
+			console.log('destroy Tables');
+
+			this.root.find('[data-bind]').each(function () {
+				$(this).unbind();
+				ko.removeNode($(this)[0]);
+			});
+
+			this.root.html('');
+
+			delete this.root;
 		}
 	}, {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '\n\t\t\t<div class="ui grid container">\n\t\t\t\t<div class="column row">\n\t\t\t\t\t<h1>Tables</h1>\n\t\t\t\t</div>\n\t\t\t\t<div class="column row two">\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t';
+			this.template = '\n\t\t\t<div class="ui grid container segment">\n\t\t\t\t<div class="column row">\n\t\t\t\t\t<div class="column">\n\t\t\t\t\t\t<h1 class="ui header">Tables</h1>\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t\t<div class="column row two">\n\t\t\t\t</div>\n\t\t\t</div>\n\t\t\t';
 		}
 	}, {
 		key: 'getTables',
@@ -997,13 +1124,13 @@ $$.Model.Tables = (function () {
 				success: function success(response) {
 					response = $.parseJSON(response);
 
-					var list = $('<div class="ui items column">').appendTo(_this.root.find('.row.two'));
+					var list = $('<div class="column">').appendTo(_this.root.find('.row.two'));
 
 					response.forEach(function (table) {
-						list.append('<a href="tables/' + table + '" class="item">' + table + '</a>');
+						list.append('\n\t\t\t\t\t<div class="ui segment">\n\t\t\t\t\t\t<a href="tables/' + table + '"><i class="icon table"></i> ' + table + '</a>\n\t\t\t\t\t</div>\n\t\t\t\t\t');
 					});
 
-					list.append('\n\n\t\t\t\t<div class="item ui form grid">\n\t\t\t\t\t<div class="field four wide column">\n\t\t\t\t\t<label for="create_table">Название таблицы</label>\n\t\t\t\t\t\t<input placeholder="Название таблицы" id="create_table" type="text" class="validate">\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="field four wide column right floated">\n\t\t\t\t\t\t<div class="ui animated fade button js-create-table" tabindex="0">\n\t\t\t\t\t\t\t<div class="visible content">Создать</div>\n\t\t\t\t\t\t\t<div class="hidden content">\n\t\t\t\t\t\t\t\t<i class="icon add Circle"></i>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>');
+					list.append('\n\n\t\t\t\t<div class="item ui form grid ui segment">\n\t\t\t\t\t<div class="field four wide column">\n\t\t\t\t\t\t<input placeholder="Название таблицы" id="create_table" type="text" class="validate">\n\t\t\t\t\t</div>\n\t\t\t\t\t<div class="field four wide column right floated">\n\t\t\t\t\t\t<div class="ui animated fade button green js-create-table" tabindex="0">\n\t\t\t\t\t\t\t<div class="visible content">Создать</div>\n\t\t\t\t\t\t\t<div class="hidden content">\n\t\t\t\t\t\t\t\t<i class="icon add Circle"></i>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</div>');
 				}
 			});
 
@@ -1112,7 +1239,7 @@ $$.FieldType.Integer = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '\n\t\t\t<div class="field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="number" data-bind="value: ' + this.options.bindKey + '.value">\n\t        </div>';
+			this.template = '\n\t\t\t<div class="field">\n\t          <input placeholder="Integer" id="' + this.options.uniqueId + '" type="number" data-bind="value: ' + this.options.bindKey + '.value">\n\t        </div>';
 		}
 	}]);
 
@@ -1149,7 +1276,7 @@ $$.FieldType.Media = (function () {
 
 			var id = _.uniqueId('input_');
 			//col ${this.options.column}
-			this.template = '\n\t\t\t<div class="field">\n\t          <input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t        </div>';
+			this.template = '\n\t\t\t<div class="field">\n\t\t\t\t<div class="ui icon input">\n\t\t\t\t\t<input placeholder="Placeholder" id="' + this.options.uniqueId + '" type="text" data-bind="value: ' + this.options.bindKey + '.value">\n\t\t\t\t\t<i class="inverted circular file image outline link icon" data-bind="click: $parent.openImageFolder"></i>\n\t\t\t\t</div>\n\t\t\t</div>';
 		}
 	}]);
 
@@ -1220,7 +1347,7 @@ $$.FieldType.Text = (function () {
 		key: '_template',
 		value: function _template() {
 			"use strict";
-			this.template = '\n\t\t\t<div class="field">\n\t          <textarea id="' + this.options.uniqueId + '" data-bind="value: ' + this.options.bindKey + '.value, uniqueName: true" rows="1"></textarea>\n\t        </div>';
+			this.template = '\n\t\t\t<div class="field">\n\t\t\t\t<div class="ui icon input">\n\t\t\t\t\t<textarea id="' + this.options.uniqueId + '" data-bind="value: ' + this.options.bindKey + '.value, uniqueName: true" rows="1"></textarea>\n\t\t\t\t\t<i class="inverted circular edit link icon" data-bind="click: $parent.openTextEditor"></i>\n\t\t\t\t</div>\n\t\t\t</div>';
 		}
 	}]);
 
@@ -1262,7 +1389,7 @@ $$.Component.Menu = (function () {
 		value: function _template() {
 			"use strict";
 
-			this.template = $("\n\t\t\t<div class=\"ui attached stackable menu\">\n\t\t\t  <div class=\"ui container\">\n\t\t\t    <a href=\"/admin/\" class=\"item\">\n\t\t\t      <i class=\"home icon\"></i> Главная\n\t\t\t    </a>\n\t\t\t    <a href=\"tables\" class=\"item\">\n\t\t\t      <i class=\"grid layout icon\"></i> Таблицы\n\t\t\t    </a>\n\t\t\t    <div class=\"right item\">\n\t\t\t      <div class=\"ui\"><a href=\"/\" target=\"_blank\">На сайт</a></div>\n\t\t\t    </div>\n\t\t\t  </div>\n\t\t\t</div>");
+			this.template = $("\n\t\t\t<div class=\"ui attached stackable menu\">\n\t\t\t  <div class=\"ui container\">\n\t\t\t    <a href=\"/admin/\" class=\"item\">\n\t\t\t      <i class=\"home icon\"></i> Главная\n\t\t\t    </a>\n\t\t\t    <a href=\"tables\" class=\"item\">\n\t\t\t      <i class=\"grid layout icon\"></i> Таблицы\n\t\t\t    </a>\n\t\t        <a href=\"login\" class=\"item\">\n\t\t\t        <i class=\"icon user\"></i> Логин\n\t\t        </a>\n\t\t\t    <div class=\"right item\">\n\t\t\t      <div class=\"ui\">\n\t\t\t      <a href=\"/\" target=\"_blank\">На сайт</a>\n\t\t\t      </div>\n\t\t\t    </div>\n\t\t\t  </div>\n\t\t\t</div>");
 		}
 	}, {
 		key: "updateMenu",
@@ -1367,6 +1494,11 @@ $$.Component.Route = (function () {
 				_this._initModel(options);
 			});
 
+			page('/login', function (options) {
+				"use strict";
+				_this._initModel(options);
+			});
+
 			page('/tables/:tableName', function (options) {
 				"use strict";
 				_this._initModel(options);
@@ -1402,6 +1534,8 @@ $$.Component.Route = (function () {
 
 			if (this.currentModel) {
 				this.currentModel.destroy();
+
+				delete this.currentModel;
 			}
 
 			if (!_.isUndefined($$.Model[modelName])) {

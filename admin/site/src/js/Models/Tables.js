@@ -20,15 +20,26 @@ $$.Model.Tables = class ModelTables {
 
 	destroy () {
 		"use strict";
-		console.log('destroy Index');
+		console.log('destroy Tables');
+
+		this.root.find('[data-bind]').each(function () {
+			$(this).unbind();
+			ko.removeNode($(this)[0]);
+		});
+
+		this.root.html('');
+
+		delete this.root;
 	}
 
 	_template () {
 		"use strict";
 		this.template = `
-			<div class="ui grid container">
+			<div class="ui grid container segment">
 				<div class="column row">
-					<h1>Tables</h1>
+					<div class="column">
+						<h1 class="ui header">Tables</h1>
+					</div>
 				</div>
 				<div class="column row two">
 				</div>
@@ -45,21 +56,24 @@ $$.Model.Tables = class ModelTables {
 			success: (response) => {
 				response = $.parseJSON(response);
 
-				var list = $('<div class="ui items column">').appendTo(this.root.find('.row.two'));
+				var list = $('<div class="column">').appendTo(this.root.find('.row.two'));
 
 				response.forEach(table => {
-					list.append(`<a href="tables/${table}" class="item">${table}</a>`);
+					list.append(`
+					<div class="ui segment">
+						<a href="tables/${table}"><i class="icon table"></i> ${table}</a>
+					</div>
+					`);
 				});
 
 				list.append(`
 
-				<div class="item ui form grid">
+				<div class="item ui form grid ui segment">
 					<div class="field four wide column">
-					<label for="create_table">Название таблицы</label>
 						<input placeholder="Название таблицы" id="create_table" type="text" class="validate">
 					</div>
 					<div class="field four wide column right floated">
-						<div class="ui animated fade button js-create-table" tabindex="0">
+						<div class="ui animated fade button green js-create-table" tabindex="0">
 							<div class="visible content">Создать</div>
 							<div class="hidden content">
 								<i class="icon add Circle"></i>

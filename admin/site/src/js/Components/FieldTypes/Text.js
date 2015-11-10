@@ -16,7 +16,10 @@ $$.FieldType.Text = class FieldTypeText {
 		"use strict";
 		this.template = `
 			<div class="field">
-	          <textarea id="${this.options.uniqueId}" data-bind="value: ${this.options.bindKey}.value, uniqueName: true" rows="1"></textarea>
-	        </div>`;
+				<div class="ui icon input">
+					<textarea id="${this.options.uniqueId}" data-bind="value: ${this.options.bindKey}.value, uniqueName: true" rows="1"></textarea>
+					<i class="inverted circular edit link icon" data-bind="click: $parent.openTextEditor"></i>
+				</div>
+			</div>`;
 	}
 };

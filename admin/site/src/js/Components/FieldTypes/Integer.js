@@ -16,7 +16,7 @@ $$.FieldType.Integer = class FieldTypeInteger {
 		"use strict";
 		this.template = `
 			<div class="field">
-	          <input placeholder="Placeholder" id="${this.options.uniqueId}" type="number" data-bind="value: ${this.options.bindKey}.value">
+	          <input placeholder="Integer" id="${this.options.uniqueId}" type="number" data-bind="value: ${this.options.bindKey}.value">
 	        </div>`;
 	}
 };

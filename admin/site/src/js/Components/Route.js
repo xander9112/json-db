@@ -26,6 +26,11 @@ $$.Component.Route = class Route {
 			this._initModel(options);
 		});
 
+		page('/login', (options) => {
+			"use strict";
+			this._initModel(options);
+		});
+
 		page('/tables/:tableName', (options) => {
 			"use strict";
 			this._initModel(options);
@@ -61,6 +66,8 @@ $$.Component.Route = class Route {
 
 		if (this.currentModel) {
 			this.currentModel.destroy();
+
+			delete this.currentModel;
 		}
 
 		if (!_.isUndefined($$.Model[modelName])) {
