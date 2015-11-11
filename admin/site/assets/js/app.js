@@ -949,9 +949,7 @@ $$.Model.Table = (function () {
 
 					$(element).append('<td class="center aligned"><a href=\'#\' data-bind=\'click: $root.removeRow\'><i class="trash icon"></i></a></td>');
 				},
-				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {
-					console.log(valueAccessor());
-				}
+				update: function update(element, valueAccessor, allBindings, viewModel, bindingContext) {}
 			};
 
 			ko.bindingHandlers.keysName = {
@@ -1353,11 +1351,11 @@ $$.FieldType.Text = (function () {
 
 	return FieldTypeText;
 })();;
-"use strict";
+'use strict';
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
 $$.Component.Menu = (function () {
 	function ComponentMenu() {
@@ -1378,21 +1376,56 @@ $$.Component.Menu = (function () {
 	}
 
 	_createClass(ComponentMenu, [{
-		key: "initialize",
+		key: 'initialize',
 		value: function initialize() {
 			"use strict";
+
+			$.ajax({
+				type: 'POST',
+				url: 'core/Menu.php',
+				success: function success(response) {
+					response = $.parseJSON(response);
+					var menu = '';
+					_.each(response, function (value, key) {
+						if (_.isObject(value)) {
+							_.each(value, function (v, k) {
+								if (_.isArray(v)) {}
+							});
+						} else {}
+					});
+				}
+			});
 
 			this.root.append(this.template);
 		}
 	}, {
-		key: "_template",
+		key: '_template',
 		value: function _template() {
 			"use strict";
 
-			this.template = $("\n\t\t\t<div class=\"ui attached stackable menu\">\n\t\t\t  <div class=\"ui container\">\n\t\t\t    <a href=\"/admin/\" class=\"item\">\n\t\t\t      <i class=\"home icon\"></i> Главная\n\t\t\t    </a>\n\t\t\t    <a href=\"tables\" class=\"item\">\n\t\t\t      <i class=\"grid layout icon\"></i> Таблицы\n\t\t\t    </a>\n\t\t        <a href=\"login\" class=\"item\">\n\t\t\t        <i class=\"icon user\"></i> Логин\n\t\t        </a>\n\t\t\t    <div class=\"right item\">\n\t\t\t      <div class=\"ui\">\n\t\t\t      <a href=\"/\" target=\"_blank\">На сайт</a>\n\t\t\t      </div>\n\t\t\t    </div>\n\t\t\t  </div>\n\t\t\t</div>");
+			this.template = $('\n<div class="ui top fixed menu">\n  <div class="item">\n    <img src="/images/logo.png">\n  </div>\n  <a class="item">Features</a>\n  <a class="item">Testimonials</a>\n  <a class="item">Sign-in</a>\n</div>\n<div class="ui bottom fixed menu">\n  <div class="item">\n    <img src="/images/logo.png">\n  </div>\n  <a class="item">Features</a>\n  <a class="item">Testimonials</a>\n  <a class="item">Sign-in</a>\n</div>\n\t\t\t');
+			/*		this.template = $(`
+    <div class="ui attached stackable menu">
+    <div class="ui container">
+    <a href="/admin/" class="item">
+    <i class="home icon"></i> Главная
+    </a>
+    <a href="tables" class="item">
+    <i class="grid layout icon"></i> Таблицы
+    </a>
+    <a href="login" class="item">
+    <i class="icon user"></i> Логин
+    </a>
+    <div class="right item">
+    <div class="ui">
+    <a href="/" target="_blank">На сайт</a>
+    </div>
+    </div>
+    </div>
+    </div>`);*/
 		}
 	}, {
-		key: "updateMenu",
+		key: 'updateMenu',
 		value: function updateMenu(currentItem) {
 			this.nodes.items.each(function (index, element) {
 				$(element).removeClass('selected active');
@@ -1403,7 +1436,7 @@ $$.Component.Menu = (function () {
 			}
 		}
 	}, {
-		key: "findUrl",
+		key: 'findUrl',
 		value: function findUrl(url) {
 			var currentItem = undefined;
 
@@ -1424,7 +1457,7 @@ $$.Component.Menu = (function () {
 			return currentItem;
 		}
 	}, {
-		key: "_cacheNodes",
+		key: '_cacheNodes',
 		value: function _cacheNodes() {
 			this.nodes = {
 				nav: this.template.find('ul'),
@@ -1432,14 +1465,14 @@ $$.Component.Menu = (function () {
 			};
 		}
 	}, {
-		key: "currentItem",
+		key: 'currentItem',
 		set: function set(url) {
 			"use strict";
 
 			this.updateMenu(this.findUrl(url));
 		}
 	}, {
-		key: "userInfo",
+		key: 'userInfo',
 		set: function set(template) {
 			"use strict";
 

@@ -276,7 +276,7 @@ $$.Model.Table = class ModelTable {
 				$(element).append(`<td class="center aligned"><a href='#' data-bind='click: $root.removeRow'><i class="trash icon"></i></a></td>`);
 			},
 			update: function (element, valueAccessor, allBindings, viewModel, bindingContext) {
-				console.log(valueAccessor());
+
 			}
 		};
 

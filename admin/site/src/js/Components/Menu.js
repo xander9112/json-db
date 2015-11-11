@@ -14,6 +14,26 @@ $$.Component.Menu = class ComponentMenu {
 	initialize () {
 		"use strict";
 
+		$.ajax({
+			type: 'POST',
+			url: 'core/Menu.php',
+			success: (response) => {
+				response = $.parseJSON(response);
+				var menu = '';
+				_.each(response, (value, key) => {
+					if (_.isObject(value)) {
+						_.each(value, (v, k) => {
+							if (_.isArray(v)) {
+
+							}
+						});
+					} else {
+
+					}
+				});
+			}
+		});
+
 		this.root.append(this.template);
 	}
 
@@ -21,24 +41,42 @@ $$.Component.Menu = class ComponentMenu {
 		"use strict";
 
 		this.template = $(`
-			<div class="ui attached stackable menu">
-			  <div class="ui container">
-			    <a href="/admin/" class="item">
-			      <i class="home icon"></i> Главная
-			    </a>
-			    <a href="tables" class="item">
-			      <i class="grid layout icon"></i> Таблицы
-			    </a>
-		        <a href="login" class="item">
-			        <i class="icon user"></i> Логин
-		        </a>
-			    <div class="right item">
-			      <div class="ui">
-			      <a href="/" target="_blank">На сайт</a>
-			      </div>
-			    </div>
-			  </div>
-			</div>`);
+<div class="ui top fixed menu">
+  <div class="item">
+    <img src="/images/logo.png">
+  </div>
+  <a class="item">Features</a>
+  <a class="item">Testimonials</a>
+  <a class="item">Sign-in</a>
+</div>
+<div class="ui bottom fixed menu">
+  <div class="item">
+    <img src="/images/logo.png">
+  </div>
+  <a class="item">Features</a>
+  <a class="item">Testimonials</a>
+  <a class="item">Sign-in</a>
+</div>
+			`);
+		/*		this.template = $(`
+		 <div class="ui attached stackable menu">
+		 <div class="ui container">
+		 <a href="/admin/" class="item">
+		 <i class="home icon"></i> Главная
+		 </a>
+		 <a href="tables" class="item">
+		 <i class="grid layout icon"></i> Таблицы
+		 </a>
+		 <a href="login" class="item">
+		 <i class="icon user"></i> Логин
+		 </a>
+		 <div class="right item">
+		 <div class="ui">
+		 <a href="/" target="_blank">На сайт</a>
+		 </div>
+		 </div>
+		 </div>
+		 </div>`);*/
 	}
 
 	set currentItem (url) {
