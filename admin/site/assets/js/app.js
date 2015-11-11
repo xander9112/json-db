@@ -1403,7 +1403,7 @@ $$.Component.Menu = (function () {
 		value: function _template() {
 			"use strict";
 
-			this.template = $('\n<div class="ui top fixed menu">\n  <div class="item">\n    <img src="/images/logo.png">\n  </div>\n  <a class="item">Features</a>\n  <a class="item">Testimonials</a>\n  <a class="item">Sign-in</a>\n</div>\n<div class="ui bottom fixed menu">\n  <div class="item">\n    <img src="/images/logo.png">\n  </div>\n  <a class="item">Features</a>\n  <a class="item">Testimonials</a>\n  <a class="item">Sign-in</a>\n</div>\n\t\t\t');
+			this.template = $('\n\n\t\t\t');
 			/*		this.template = $(`
     <div class="ui attached stackable menu">
     <div class="ui container">

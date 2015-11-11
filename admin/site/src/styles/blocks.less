@@ -2,25 +2,34 @@
 @import "variables";
 
 body {
-  display: flex;
   min-height: 100vh;
-  flex-direction: column;
+  background-color: #DADADA;
 }
 
-main {
-  flex: 1 0 auto;
-}
-
-.b-login-page {
+.b-login {
   & > .grid {
     height: 100%;
   }
 
   .image {
-    //margin-top: -100px;
+    margin-top: -100px;
   }
 
   .column {
     max-width: 450px;
   }
+}
+
+.ui.menu .item img.logo {
+  margin-right: 1.5em;
+}
+.main.container {
+  margin-top: 7em;
+}
+.wireframe {
+  margin-top: 2em;
+}
+.ui.footer.segment {
+  margin: 5em 0em 0em;
+  padding: 5em 0em;
 }

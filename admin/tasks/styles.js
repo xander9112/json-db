@@ -4,7 +4,7 @@ var plumber = require('gulp-plumber');
 
 gulp.task('styles', function () {
     return gulp.src([
-	    'site/src/vendor/materialize/css/*',
+	    'site/src/styles/semantic.less',
 	    'site/src/styles/*.less'
     ])
         .pipe(plumber())
